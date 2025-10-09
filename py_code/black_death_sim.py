@@ -14,7 +14,7 @@ class Province:
 
         name        — нname of the province/city
         population  —  total population of the province/city
-        province_type   — тип ("city", "town", "village", "rural" etc)
+        province_type   — type ("city", "town", "village", "rural" etc)
         """
 
         self.province_name = province_name
@@ -160,3 +160,11 @@ Province.print_all_provinces(provinces)
 riga.step()
 
 Province.print_all_provinces(provinces)
+
+
+
+#riga.step()
+#Province.print_all_provinces(provinces)
+
+#riga.step()
+#Province.print_all_provinces(provinces)
