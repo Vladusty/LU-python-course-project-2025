@@ -309,7 +309,7 @@ if __name__ == "__main__":
 
 
 """
-riga = Province("Riga", 7000, "town") # find Riga pop in 1346.
+riga = Province("Riga", 6500, "town") # find Riga pop in 1346.
 tallinn = Province("Reval", 4000, "town") # find Reval (Tallin) pop in 1346.
 tartu = Province("Derpt", 2000, "town") # find Derpt (Tartu) pop in 1346.
 novgorod = Province("Novgorod", 20000, "city") # find Novgorod pop in 1346.
