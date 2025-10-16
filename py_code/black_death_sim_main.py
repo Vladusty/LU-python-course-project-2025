@@ -1,3 +1,11 @@
+"""
+The Black Death occurred in Europe from 1346 to 1353.
+
+List of cities:
+https://www.reddit.com/r/europe/comments/4kdvo1/the_thirty_largest_cities_in_europe_by_population/#lightbox
+
+"""
+
 import networkx as nx  # bibliotēka darbam ar grafiem (pilsētu savienojumiem)
 import random           # bibliotēka nejaušiem skaitļiem (random izvēlēm)
 
