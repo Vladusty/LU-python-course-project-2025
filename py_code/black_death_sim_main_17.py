@@ -204,7 +204,7 @@ def super_commute_spikes(
     k_min: int = 100,            # kontaktu 'paciņas' minimālais lielums
     k_max: int = 600,            # kontaktu 'paciņas' maksimālais lielums
     spike_rate: float = 0.02,    # mērogs (tās pašas vienības, kas commute_rate)
-    rate_mult: float = 30.0,     # cik reizes stiprāks par parasto ienesumu
+    rate_mult: float = 35.0,     # cik reizes stiprāks par parasto ienesumu
     rng: random.Random | None = None
 ) -> dict[City_SIRD, float]:
     """
@@ -295,6 +295,8 @@ palermo         = City_SIRD(51000,   initial_infected=0, name="Palermo",        
 naples          = City_SIRD(55000,   initial_infected=0, name="Naples",          beta=0.28, gamma=0.08, mu=0.06)
 tunis           = City_SIRD(40000,   initial_infected=0, name="Tunis",           beta=0.28, gamma=0.08, mu=0.06)
 cairo           = City_SIRD(400000,  initial_infected=0, name="Cairo",           beta=0.28, gamma=0.08, mu=0.06)
+athens          = City_SIRD(25000,  initial_infected=0, name="Athens",           beta=0.28, gamma=0.08, mu=0.06)
+florence        = City_SIRD(110000,  initial_infected=0, name="Florence",        beta=0.28, gamma=0.08, mu=0.06)
 
 sarai           = City_SIRD(100000,  initial_infected=0, name="Sarai",           beta=0.28, gamma=0.08, mu=0.06)
 
@@ -303,36 +305,57 @@ sarai           = City_SIRD(100000,  initial_infected=0, name="Sarai",          
 # ==== ADD NODES TO GRAPH ====
 G = nx.Graph()
 for c in [feodosia, constantinople, thessaloniki, ragusa, venice, genoa,
-          marseille, barcelona, palermo, naples, tunis, cairo]:
+          marseille, barcelona, palermo, naples, tunis, cairo, athens, florence, sarai]:
     G.add_node(c)
 
 # === EDGES ====
 G.add_edge(feodosia, constantinople, weight=3.0)
-G.add_edge(feodosia, sarai, weight=1.0)
+G.add_edge(feodosia, genoa,          weight=3.0)
+G.add_edge(feodosia, sarai,          weight=1.0)
 
 
 G.add_edge(constantinople, thessaloniki, weight=2.0)
-G.add_edge(constantinople, ragusa,       weight=1.5)
+G.add_edge(constantinople, ragusa,       weight=1.0)
 G.add_edge(constantinople, venice,       weight=1.0)
+G.add_edge(constantinople, athens,       weight=1.6)
+G.add_edge(constantinople, genoa,        weight=1.4)
+G.add_edge(constantinople, cairo,       weight=1.0)
 
-G.add_edge(thessaloniki, venice, weight=1.2)
+
+G.add_edge(cairo, venice,      weight=1.2)
+G.add_edge(cairo, genoa,       weight=1.0)
+
+
+G.add_edge(thessaloniki, athens, weight=1.4)
+G.add_edge(thessaloniki, venice, weight=0.9)
+
 
 G.add_edge(ragusa, venice, weight=2.0)
-G.add_edge(ragusa, genoa,  weight=1.2)
+G.add_edge(ragusa, genoa,  weight=1.0)
+
 
 G.add_edge(venice, genoa,      weight=2.0)
 G.add_edge(venice, marseille,  weight=1.0)
+G.add_edge(venice, athens,  weight=1.1)
+G.add_edge(venice, florence,  weight=0.7)
+G.add_edge(venice, naples,  weight=0.9)
+
 G.add_edge(genoa, marseille,   weight=1.5)
+G.add_edge(genoa, barcelona,   weight=1.1)
 
 G.add_edge(marseille, barcelona, weight=1.3)
 G.add_edge(marseille, tunis,     weight=1.0)
+
+G.add_edge(barcelona, tunis,     weight=0.9)
+
+
 
 G.add_edge(tunis, palermo, weight=1.2)
 G.add_edge(palermo, naples, weight=1.2)
 G.add_edge(naples, genoa,   weight=1.0)
 
 
-G.add_edge(tunis, cairo, weight=0.8)
+G.add_edge(tunis, cairo, weight=0.6)
 
 initial_pop = {c: (c.S + c.I + c.R + c.D) for c in G.nodes}
 
@@ -358,8 +381,8 @@ for day in range(1, 366):
         super_prob=0.35,
         events=1,
         k_min=10, k_max=60,
-        spike_rate=0.001,
-        rate_mult=25.0,
+        spike_rate=0.002,
+        rate_mult=35.0,
         rng=rng
     )
 
