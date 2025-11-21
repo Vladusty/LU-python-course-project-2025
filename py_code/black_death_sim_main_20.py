@@ -306,7 +306,7 @@ bns_cities = [riga, vilnius, tallinn, berlin, brussels, danzig, ghent, turku, du
     paris, stockholm, york, vnovgorod, nurmberg, prague, lubeck, london, krakow,
     bern, erfurt, bruges, bergen, deventer, copenhagen, polotsk, wroclaw
 ]
-for city in bns_cities:
+for c in bns_cities:
     G.add_node(c)
 
 # === EDGES ====
