@@ -309,6 +309,9 @@ bns_cities = [riga, vilnius, tallinn, berlin, brussels, danzig, ghent, turku, du
 for c in bns_cities:
     G.add_node(c)
 
+
+
+
 # === EDGES ====
 # Vidusjūras pilsētas sakari
 G.add_edge(feodosia, constantinople, weight=3.0)
@@ -359,7 +362,7 @@ G.add_edge(naples, genoa,   weight=1.0)
 
 G.add_edge(tunis, cairo, weight=0.6)
 
-# BNS (Baltic-North Sea) pilsētas
+# Baltic-North Sea pilsētas
 
 G.add_edge(london, bruges, weight=2.0)
 G.add_edge(london, paris, weight=1.5)
