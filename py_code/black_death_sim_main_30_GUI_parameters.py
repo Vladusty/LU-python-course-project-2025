@@ -801,8 +801,7 @@ def apply_global_params_to_cities(G, beta, gamma, mu, cap_frac, overload_mult):
         c.overload_mult = overload_mult
 
 
-def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes,
-                    total_days=2554, step_ms=40):
+def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes, total_days=2554, step_ms=40):
     """
     1) Parāda parametru ievades logu.
     2) Uzliek parametrus visām pilsētām.
@@ -848,7 +847,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes,
 
     info_label = tk.Label(
         form,
-        text="Atstāj tukšu, ja vēlies izmantot noklusējuma vērtību.",
+        text="Atstāj tukšu, ja vēlies izmantot noklusējuma vērtības.",
         fg="gray"
     )
     info_label.grid(row=row, column=0, columnspan=2, pady=(8, 4))
@@ -891,9 +890,9 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes,
 
         # Normē varbūtību robežās [0,1]
         if super_prob < 0:
-            super_prob = 0.0
+            super_prob = 0
         elif super_prob > 1:
-            super_prob = 1.0
+            super_prob = 1
 
         # Uzliek parametrus visām pilsētām
         apply_global_params_to_cities(G, beta, gamma, mu, cap_frac, overload_mult)
@@ -908,8 +907,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes,
         W = root.winfo_width()
         H = root.winfo_height()
 
-        view = MapView(root, G, width=W, height=H,
-                       scale_k_alive=0.15, scale_k_inf=0.25)
+        view = MapView(root, G, width=W, height=H, scale_k_alive=0.15, scale_k_inf=0.25)
 
         day_state = {"day": 0}
         rng_shocks = random.Random(42)
@@ -933,7 +931,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes,
                 rng=rng_shocks
             )
 
-            ext = {u: base_ext[u] + spike_ext.get(u, 0.0) for u in G.nodes}
+            ext = {u: base_ext[u] + spike_ext.get(u, 0) for u in G.nodes}
 
             for city in G.nodes:
                 city.step(external_infection_force=ext[city])
