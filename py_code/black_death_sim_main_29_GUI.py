@@ -1,0 +1,828 @@
+"""
+The Black Death occurred in Europe from 1346 to 1353.
+"""
+
+import networkx as nx # Tīklu (grafu) bibliotēka: grafa virsotnes - pilsētas, grafa šķautnes - pilsētu savienojumi (tirdzniecības ceļi)
+import random
+import numpy as np
+import tkinter as tk
+import math
+
+
+class City_SIRD:
+    """
+    S (susceptible) — cilvēki, kas var saslimst
+    I (infectious) — inficētie (saslimušie) (tagad slimo)
+    R (recovered) — izveseļojušies (nevar nekad vairs saslimst - rezistenti)
+    D (dead) — nomirušie
+    N (alive) – S+I+R (cilvēki, kas nav nomiruši)
+
+    β (beta) – inficēšanās varbūtība par vienu dienu (lipīgums) (koeficients)
+    γ (gamma) – izveseļošanas varbūtība par vienu dienu (koeficients)
+    μ (mu) – nomiršanas varbūtība par vienu dienu [tikai tiem, kuri jau ir I (inficētie]
+    """
+
+    def __init__(self, population, initial_infected=0, beta=0.099, gamma=0.0225, mu=0.009, name="City", cap_frac=0.08, overload_mult=1.0):
+        self.name = name  # pilsētas nosaukums
+
+        # SIRD sākotnējie stāvokļi
+        self.S = population - initial_infected
+        self.I = initial_infected
+        self.R = 0                # katra pilsēta no sākuma nav izveseļoto
+        self.D = 0                # no sākuma nav neviena nomiruša
+
+        self.beta = beta          # inficēšanās varbūtība par vienu dienu (lipīgums) (koeficients)
+        self.gamma = gamma * random.uniform(0.90, 1.10) #izveseļošanas varbūtība par vienu dienu. random, lai dažādas pilsētas būtu nejauša izveseļošanas varbūtība (gamma) (lai tas atšķīras)
+        self.mu = mu * random.uniform(0.85, 1.15) # nomiršanas varbūtība par vienu dienu. random, lai dažādas pilsētas būtu nejauša nomiršanas varbūtība (mu) (lai tas atšķīras)
+
+        # pilsētas "kapacitāte".
+        # Tas ir nepieciešams lai realizētu šo ideju: Ja ir pārāk daudz inficēto relatīvi pret dzīviem (I/N), tad palielinas mirstība (μ).
+        self.cap_frac = cap_frac
+
+        # cik daudz reižu var palielināties mirstība pie cap_frac pārpildīšanas.
+        self.overload_mult = overload_mult
+
+    def state(self):
+        # Atgriež pašreizējo stāvokli (noapaļotu uz leju)
+        return {"S": int(self.S), "I": int(self.I), "R": int(self.R), "D": int(self.D)}
+
+    def step(self, external_infection_force=0):
+
+        # N - Dzīvie cilvēki (veselie + inficētie + recovered) (mirušie D netiek skaitīti)
+        N = self.S + self.I + self.R
+        if N <= 0:
+            return None # pilsēta izmirusī, nav ko rēķināt - izejam no funkcijas
+
+        # Iekšējais infekcijas spēks: I / N
+        internal_force = self.I / N
+
+        # Pievienojam ārējo infekcijas ienesumu
+        raw_force = internal_force + external_infection_force
+
+        # Ierobežojam robežās [0, 1]
+        if raw_force < 0:
+            force = 0
+        elif raw_force > 1:
+            force = 1
+        else:
+            force = raw_force
+
+        # Inficēšanās un izveseļošanās koeficienti
+        p_inf = self.beta * force
+        p_rec = self.gamma
+
+        # Slodze uz pilsētu: cik liela daļa ir inficēti
+        load = self.I / N
+
+
+        # Ja slodze pārspēj kapacitāti, aprēķina pārslodzi. Ja ir pārāk daudz inficēto relatīvi pret dzīviem (I/N), tad palielinas mirstība (μ).
+        if load <= self.cap_frac:
+            overload = 0.0
+        else:
+            overload = (load - self.cap_frac) / self.cap_frac
+
+        mu_eff = self.mu * (1 + self.overload_mult * overload)
+
+        if mu_eff > 1:
+            p_die = 1
+        else:
+            p_die = mu_eff
+
+        if p_inf < 0:
+            p_inf = 0
+        elif p_inf > 1:
+            p_inf = 1
+
+        if p_rec < 0:
+            p_rec = 0
+        elif p_rec > 1:
+            p_rec = 1
+
+        if p_die < 0:
+            p_die = 0
+        elif p_die > 1:
+            p_die = 1
+
+        # === JAUNIE INFICĒTIE ===
+        S_int = int(self.S)
+        new_infected = int(np.random.binomial(S_int, p_inf))
+
+        # === APRĒĶINI I GRUPAI ===
+        I_int = int(self.I)
+
+        # p_rec + p_die nedrīkst pārsniegt 1
+        s = p_rec + p_die
+        if s > 1:
+            p_rec = p_rec / s
+            p_die = p_die / s
+
+        # p_stay — tie, kas paliek slimi
+        p_stay = 1 - p_rec - p_die
+        if p_stay < 0:
+            p_stay = 0
+
+
+        # Cik daudz recovered (izveseļojušies)
+        rec = np.random.binomial(I_int, p_rec)
+
+        # Palikušie infected
+        remaining_after_rec = I_int - rec
+        if remaining_after_rec < 0:
+            remaining_after_rec = 0
+
+        # Cik daudz nomira no palikušiem infected
+        died = np.random.binomial(remaining_after_rec, p_die / (p_die + p_stay))
+
+        # Cik infected palika
+        stay = remaining_after_rec - died
+        if stay < 0:
+            stay = 0
+
+
+        # === ATJAUNINĀM STĀVOKLI ===
+        self.S -= new_infected
+        self.I += new_infected - rec - died
+        self.R += rec
+        self.D += died
+
+
+        # Noapaļo un novērš negatīvas vērtības (ja mazāks par 0, tad iestatīt uz 0)
+        self.S = int(self.S)
+        if self.S < 0:
+            self.S = 0
+
+        self.I = int(self.I)
+        if self.I < 0:
+            self.I = 0
+
+        self.R = int(self.R)
+        if self.R < 0:
+            self.R = 0
+
+        self.D = int(self.D)
+        if self.D < 0:
+            self.D = 0
+
+
+def compute_commute_forces(G: nx.Graph, commute_rate=0.001) -> dict[City_SIRD, float]:
+    """
+    Aprēķina ārējo infekcijas ienesumu katrai pilsētai, balstoties uz tirdzniecību starp pilsētām.
+    Populācijas S/I/R netiek mainītas, tikai atgriež ārējo spiedienu (external_infection_force koeficientu).
+
+    IDEJA:
+    Katra pilsēta u saņem "ārējo infekcijas spiedienu" no visām kaimiņu pilsētām v. ("var iedomāties kā infekciju staru")
+    Pieņēmums: jo spēcīgāka ir saikne v→u (tirdzniecības/intensitātes svars), un jo lielāka inficēto daļa v (I_v/N_v), jo lielāks ir infekcijas ienesums uz u.
+    """
+
+    # === REZULTĀTA SĀKOTNĒJĀ TABULA (0 katrai pilsētai) ===
+    # Izveidojam tukšu vārdnīcu ārējās infekcijas spiedienam
+    external_infection_force = {}
+
+    # Katrai pilsētai piešķiram sākotnējo vērtību 0.0 (external_infection_force)
+    for city in G.nodes:
+        external_infection_force[city] = 0
+
+    # === 1) APREĶINĀM SUM_W(v) KATRAI PILSĒTAI ===
+    # sum_w(v) = visu izejošo šķautņu svaru summa
+    total_edge_weight_from_city = {}
+
+    for city in G.nodes: # ejam cauri katrai city in G.nodes
+        neighbors = list(G[city].items())  # visi kaimiņi
+
+        if len(neighbors) == 0:
+            # Ja nav kaimiņu, nav ārēja spiediena
+            total_edge_weight_from_city[city] = 0
+        else:
+            total = 0.0
+            for _, edge_data in neighbors:
+                weight = edge_data.get("weight", 1)
+                weight = max(weight, 0)  # negatīvs svars nav atļauts
+                total += weight
+
+            total_edge_weight_from_city[city] = total
+
+
+    # === 2) APRĒĶINĀM IENĀKOŠO INFEKCIJAS SPIEDIENI KATRAI PILSĒTAI ===
+    for target_city in G.nodes:                        # pilsēta, kas SAŅEM infekciju
+        for source_city, edge_data in G[target_city].items():  # Pilsēta, kas NODOD infekciju
+            weight_uv = edge_data.get("weight", 1)
+            weight_uv = max(weight_uv, 0)
+
+            # Summa visiem source_city savienojumiem
+            total_w = total_edge_weight_from_city[source_city]
+
+            # Ja avota pilsētai nav maršrutu (nav transporta) – izlaižam
+            if total_w <= 0.0:
+                continue
+
+            # Dzīvā populācija avota pilsētā
+            N_v = source_city.S + source_city.I + source_city.R
+            if N_v <= 0:
+                continue  # pilsēta izmirusi
+
+            infected_ratio = source_city.I / N_v  # I_v / N_v
+
+            # Pieskaitām infekcijas ienesumu
+            external_infection_force[target_city] += commute_rate * (weight_uv / total_w) * infected_ratio
+
+
+    # === ATGRIEŽAM APRĒĶINĀTOS ĀRĒJOS SPIEDIENA KOEFICIENTUS (kā dict) ===
+    return external_infection_force
+
+
+def super_commute_spikes(
+    G,
+    day,
+    super_period = 14,       # ik pa N dienām pārbaudām
+    super_prob = 0.50,    # varbūtība, ka šajā dienā notikums notiek
+    events = 2,             # cik 'lēciens' (v->u) tiks izspēlēti
+    k_min = 100,            # kontaktu 'paciņas' minimālais lielums
+    k_max = 300,            # kontaktu 'paciņas' maksimālais lielums
+    spike_rate = 0.0008,    # mērogs (tās pašas vienības, kas commute_rate)
+    rate_mult = 80.0,     # cik reizes stiprāks par parasto ienesumu
+    rng = None
+) -> dict[City_SIRD, float]:
+    """
+    Atgriež: {pilsēta: papildus ārējais infekcijas spiediens} konkrētajā dienā.
+    S/I/R/D NETIEK mainīti.
+
+    IDEJA:
+    - Reti (reizi super_period dienās) un ar varbūtību super_prob notiek 'liels notikums' (jeb šoks) (piem., kuģa ierašanās).
+    """
+
+    # Ja nav padots rng, izmantojam standarta random moduli
+    if rng is None:
+        rng = random
+
+    # Sākumā visām pilsētām papildus spiediens ir 0
+    external_spike = {}
+    for city in G.nodes:
+        external_spike[city] = 0.0
+
+
+    # === KALENDĀRA UN VARBŪTĪBAS TRIGGERS ===
+    # Ja super_period ir 0 vai mazāks, tad "lielie notikumi" nekad nenotiek
+    if super_period <= 0:
+        return external_spike
+
+    # Ja šī diena nav dalāma ar super_period, tad šodien "lielais notikums" nav paredzēts
+    if (day % super_period) != 0:
+        return external_spike
+
+    # Pat ja diena der, notikums notiek tikai ar varbūtību super_prob
+    if rng.random() >= super_prob:
+        return external_spike
+
+
+    # === KANDIDĀTU APKOPE: v->u ar svariem ~ w * (I_v/N_v) ====
+    candidates = []   # saraksts ar (v, u, w)
+    weights = []      # atbilstošie svari izvēlei
+
+    for source_city in G.nodes:
+        N_v = source_city.S + source_city.I + source_city.R
+        if N_v <= 0:
+            continue
+        if source_city.I <= 0:
+            continue
+
+        infected_ratio = source_city.I / N_v  # I_v / N_v
+
+        for target_city, edge_data in G[source_city].items():
+            w = edge_data.get("weight", 1)
+            w = max(0.0, w)
+            if w <= 0.0:
+                continue
+
+            candidates.append((source_city, target_city, w))
+            weights.append(w * infected_ratio)
+
+    # Ja nav kandidātu
+    if len(candidates) < 1:
+        return external_spike
+
+    # Saskaitām svarus pavisam vienkārši
+    total_weights = 0
+    for w in weights:
+        total_weights = total_weights + w
+
+    # Ja svars = 0, tad nav iespējams izvēlēties nevienu kandidātu
+    if total_weights == 0:
+        return external_spike
+
+
+    jumps_to_draw = int(events)
+    if jumps_to_draw < 1:
+        jumps_to_draw = 1
+
+
+    for _ in range(jumps_to_draw):
+        # Kopējais svaru lielums
+        total_weight = 0.0
+        for w in weights:
+            total_weight += w
+
+        # Izvēlamies nejaušu skaitli intervālā [0; total_weight)
+        r = rng.random() * total_weight
+
+        # Vienkārša loterija: ejam cauri svariem, līdz sasniedzam r
+        cum = 0.0
+        index = 0
+        while index < len(weights):
+            cum += weights[index]
+            if r <= cum:
+                break
+            index += 1
+
+        # Paņemam attiecīgo kandidātu
+        source_city, target_city, w = candidates[index]
+
+
+        N_u = target_city.S + target_city.I + target_city.R
+        if N_u <= 0.0:
+            continue  # mērķis 'izmiris' — šoks nepiemērojas
+
+        contacts_k = rng.randint(k_min, k_max)
+
+        external_spike[target_city] += rate_mult * spike_rate * (contacts_k / N_u)
+
+
+
+    # === REZULTĀTS ===
+    return external_spike
+
+
+# ==== IZVEIDOJAM TĪKLU ====
+
+# Vidusjūra
+feodosia        = City_SIRD(40000,   initial_infected=0, name="Feodosia")
+constantinople  = City_SIRD(150000,  initial_infected=0, name="Constantinople")
+thessaloniki    = City_SIRD(120000,  initial_infected=0, name="Thessaloniki")
+ragusa          = City_SIRD(30000,   initial_infected=0, name="Ragusa")
+venice          = City_SIRD(150000,  initial_infected=0, name="Venice")
+genoa           = City_SIRD(90000,   initial_infected=0, name="Genoa")
+marseille       = City_SIRD(31000,   initial_infected=0, name="Marseille")
+barcelona       = City_SIRD(48000,   initial_infected=0, name="Barcelona")
+palermo         = City_SIRD(51000,   initial_infected=0, name="Palermo")
+naples          = City_SIRD(55000,   initial_infected=0, name="Naples")
+tunis           = City_SIRD(40000,   initial_infected=0, name="Tunis")
+cairo           = City_SIRD(400000,  initial_infected=0, name="Cairo")
+athens          = City_SIRD(25000,   initial_infected=0, name="Athens")
+florence        = City_SIRD(110000,  initial_infected=0, name="Florence")
+
+sarai           = City_SIRD(100000,  initial_infected=100, name="Sarai")
+
+burgos      = City_SIRD(25000,  initial_infected=0, name="Burgos")
+bordeaux    = City_SIRD(35000,  initial_infected=0, name="Bordeaux")
+montpellier = City_SIRD(35000,  initial_infected=0, name="Montpellier")
+toulouse    = City_SIRD(30000,  initial_infected=0, name="Toulouse")
+
+
+# Baltijas un Ziemeļu jūra jeb sviesta eiropa
+
+riga            = City_SIRD(6500,   initial_infected=0, name="Riga")
+vilnius         = City_SIRD(20000,  initial_infected=0, name="Vilnius")
+tallinn         = City_SIRD(4000,   initial_infected=0, name="Tallinn")
+berlin          = City_SIRD(5500,   initial_infected=0, name="Berlin")
+brussels        = City_SIRD(30000,  initial_infected=0, name="Brussels")
+danzig          = City_SIRD(20000,  initial_infected=0, name="Danzig")
+ghent           = City_SIRD(55000,  initial_infected=0, name="Ghent")
+turku           = City_SIRD(5000,   initial_infected=0, name="Turku")
+dublin          = City_SIRD(20000,  initial_infected=0, name="Dublin")
+oslo            = City_SIRD(5000,   initial_infected=0, name="Oslo")
+paris           = City_SIRD(200000, initial_infected=0, name="Paris")
+stockholm       = City_SIRD(8000,   initial_infected=0, name="Stockholm")
+york            = City_SIRD(23000,  initial_infected=0, name="York")
+vnovgorod       = City_SIRD(50000,  initial_infected=0, name="Novgorod")
+nurmberg        = City_SIRD(20000,  initial_infected=0, name="Nurmberg")
+prague          = City_SIRD(40000,  initial_infected=0, name="Prague")
+lubeck          = City_SIRD(24000,  initial_infected=0, name="Lubeck")
+london          = City_SIRD(80000,  initial_infected=0, name="London")
+krakow          = City_SIRD(10000,  initial_infected=0, name="Krakow")
+bern            = City_SIRD(5000,   initial_infected=0, name="Bern")
+erfurt          = City_SIRD(32000,  initial_infected=0, name="Erfurt")
+bruges          = City_SIRD(50000,  initial_infected=0, name="Bruges")
+bergen          = City_SIRD(7000,   initial_infected=0, name="Bergen")
+deventer        = City_SIRD(13000,  initial_infected=0, name="Deventer")
+copenhagen      = City_SIRD(3000,   initial_infected=0, name="Copenhagen")
+polotsk         = City_SIRD(5000,   initial_infected=0, name="Polotsk")
+wroclaw         = City_SIRD(12000,  initial_infected=0, name="Wroclaw")
+
+
+# ==== ADD NODES TO GRAPH ====
+
+G = nx.Graph()
+
+cities = [
+    feodosia, constantinople, thessaloniki, ragusa, venice, genoa,
+    marseille, barcelona, palermo, naples, tunis, cairo, athens, florence,
+    sarai, burgos, bordeaux, montpellier, toulouse, riga, vilnius, tallinn, berlin, brussels, danzig, ghent, turku, dublin, oslo,
+    paris, stockholm, york, vnovgorod, nurmberg, prague, lubeck, london, krakow,
+    bern, erfurt, bruges, bergen, deventer, copenhagen, polotsk, wroclaw
+]
+
+for c in cities:
+    G.add_node(c)
+
+# === EDGES ====
+# Vidusjūras pilsētas sakari
+G.add_edge(feodosia, constantinople, weight=3.0)
+G.add_edge(feodosia, genoa,          weight=2.0)
+G.add_edge(feodosia, sarai,          weight=0.4)
+
+G.add_edge(constantinople, thessaloniki, weight=2.0)
+G.add_edge(constantinople, ragusa,       weight=1.0)
+G.add_edge(constantinople, venice,       weight=1.2)
+G.add_edge(constantinople, athens,       weight=1.2)
+G.add_edge(constantinople, genoa,        weight=1.3)
+G.add_edge(constantinople, cairo,        weight=0.5)
+G.add_edge(constantinople, palermo,      weight=1.2)
+
+G.add_edge(cairo, venice,      weight=0.8)
+G.add_edge(cairo, genoa,       weight=0.7)
+
+G.add_edge(thessaloniki, athens, weight=1.2)
+G.add_edge(thessaloniki, venice, weight=0.8)
+
+G.add_edge(ragusa, venice, weight=2.0)
+G.add_edge(ragusa, genoa,  weight=1.0)
+
+G.add_edge(venice, genoa,      weight=2.2)
+G.add_edge(venice, marseille,  weight=1.2)
+G.add_edge(venice, athens,     weight=0.8)
+G.add_edge(venice, florence,   weight=0.6)
+G.add_edge(venice, naples,     weight=0.8)
+
+G.add_edge(genoa, marseille,   weight=1.8)
+G.add_edge(genoa, barcelona,   weight=1.3)
+
+G.add_edge(marseille, barcelona, weight=2.0)
+G.add_edge(marseille, tunis,     weight=1.0)
+
+G.add_edge(barcelona, tunis,     weight=0.8)
+
+G.add_edge(tunis, palermo, weight=1.3)
+G.add_edge(palermo, naples, weight=1.0)
+G.add_edge(naples, genoa,   weight=0.9)
+
+G.add_edge(tunis, cairo, weight=0.5)
+
+G.add_edge(barcelona, montpellier,  weight=1.3)
+G.add_edge(montpellier, marseille,  weight=1.0)
+G.add_edge(montpellier, toulouse,   weight=0.8)
+G.add_edge(toulouse, bordeaux,      weight=0.9)
+
+G.add_edge(barcelona, burgos,       weight=0.8)
+G.add_edge(burgos, bordeaux,        weight=0.7)
+
+G.add_edge(bordeaux, paris,   weight=1.2)
+G.add_edge(bordeaux, london,  weight=1.0)
+
+# Baltic-North Sea pilsētas
+
+G.add_edge(london, bruges,  weight=1.2)
+G.add_edge(london, paris,   weight=1.0)
+G.add_edge(london, bergen,  weight=0.3)
+
+G.add_edge(bruges, ghent,    weight=1.4)
+G.add_edge(bruges, deventer, weight=0.7)
+G.add_edge(bruges, lubeck,   weight=0.5)
+
+G.add_edge(paris, brussels, weight=1.2)
+G.add_edge(paris, bern,     weight=0.5)
+
+G.add_edge(riga, tallinn,    weight=0.8)
+G.add_edge(riga, vilnius,    weight=0.6)
+G.add_edge(riga, danzig,     weight=1.0)
+G.add_edge(riga, stockholm,  weight=0.4)
+
+G.add_edge(danzig, wroclaw,    weight=0.6)
+G.add_edge(danzig, lubeck,     weight=1.2)
+G.add_edge(danzig, copenhagen, weight=1.0)
+
+G.add_edge(lubeck, copenhagen, weight=1.2)
+G.add_edge(lubeck, berlin,     weight=0.7)
+
+G.add_edge(berlin, nurmberg, weight=0.6)
+G.add_edge(nurmberg, prague, weight=0.8)
+G.add_edge(prague, krakow,   weight=0.7)
+
+G.add_edge(stockholm, bergen,     weight=0.2)
+G.add_edge(stockholm, turku,      weight=0.6)
+G.add_edge(stockholm, copenhagen, weight=0.8)
+G.add_edge(oslo,      bergen,     weight=0.7)
+
+G.add_edge(vnovgorod, polotsk, weight=0.7)
+G.add_edge(vnovgorod, riga,    weight=0.7)
+
+G.add_edge(polotsk, vilnius, weight=0.6)
+G.add_edge(tallinn, stockholm, weight=0.8)
+
+G.add_edge(erfurt, berlin,   weight=0.4)
+G.add_edge(erfurt, nurmberg, weight=0.4)
+G.add_edge(erfurt, prague,   weight=0.3)
+G.add_edge(erfurt, bruges,   weight=0.3)
+
+G.add_edge(brussels, ghent,    weight=0.7)
+G.add_edge(brussels, deventer, weight=0.6)
+
+G.add_edge(york,   london, weight=0.8)
+G.add_edge(york,   dublin, weight=0.5)
+
+G.add_edge(dublin, london, weight=0.7)
+
+G.add_edge(wroclaw, prague, weight=0.6)
+G.add_edge(wroclaw, krakow, weight=0.6)
+
+
+
+initial_pop = {}
+for c in G.nodes:
+    initial_pop[c] = c.S + c.I + c.R + c.D
+
+
+
+rng = random.Random(123)
+
+for c in G.nodes:
+    c.beta *= rng.uniform(0.9, 1.1)
+    c.mu   *= rng.uniform(0.9, 1.1)
+    c.cap_frac *= rng.uniform(0.8, 1.2)
+
+
+
+'''
+# ==== SIMULĀCIJA  ====
+rng = random.Random(42)
+for day in range(1, 2555):
+    base_ext = compute_commute_forces(G, commute_rate=0.00012)
+
+    spike_ext = super_commute_spikes(
+        G, day,
+        super_period=14,
+        super_prob=0.50,
+        events=2,
+        k_min=80, k_max=300,
+        spike_rate=0.0008,
+        rate_mult=80.0,
+        rng=rng
+    )
+
+    ext = {}
+    for u in G.nodes:
+        ext[u] = base_ext[u] + spike_ext.get(u, 0.0)
+
+    for city in G.nodes:
+        city.step(external_infection_force=ext[city])
+
+    print(f"\nDay {day}")
+    for city in G.nodes:
+        s = city.state()
+        N = city.S + city.I + city.R
+        print(f"{city.name:9s} |  N={N:.0f}, S={s['S']:.0f}, I={s['I']:.0f}, R={s['R']:.0f}, D={s['D']:.0f}")
+
+
+print("\nResults:")
+for c in G.nodes:
+    N0 = initial_pop[c]
+
+    if N0 > 0:
+        IFR = c.D / N0
+    else:
+        IFR = float('nan')
+
+    print(f"{c.name:12s} D={int(c.D):7d}  N0={int(N0):7d}  IFR={IFR:.3f}  ({IFR * 100:.1f}%)")
+'''
+
+# ==== TKINTER KARTE PĒC MODEĻA UN GRAFA ====
+
+# Kartes robežas (nosacīta "Eiropa + Austrumi")
+MAP_BOUNDS = dict(
+    lon_min=-10.0,  # rietumos aiz Ibērijas
+    lon_max=50.0,   # austrumos aiz Sarat
+    lat_min=30.0,   # nedaudz dienvidos no Kairas
+    lat_max=62.0    # ziemeļos virs Bergen / Turku
+)
+
+# Reālas (aptuvenas) pilsētu garuma/platuma koordinātas grafā G
+COORDS = {
+    "Feodosia":      (35.38, 45.03),
+    "Constantinople":(28.97, 41.01),
+    "Thessaloniki":  (22.94, 40.64),
+    "Ragusa":        (18.09, 42.65),
+    "Venice":        (12.33, 45.44),
+    "Genoa":         (8.93,  44.41),
+    "Marseille":     (5.37,  43.30),
+    "Barcelona":     (2.17,  41.38),
+    "Palermo":       (13.36, 38.12),
+    "Naples":        (14.27, 40.85),
+    "Tunis":         (10.17, 36.81),
+    "Cairo":         (31.24, 35.04),
+    "Athens":        (23.73, 37.98),
+    "Florence":      (11.25, 43.77),
+    "Sarai":         (46.00, 48.00),
+
+    "Burgos":        (-3.70, 42.34),
+    "Bordeaux":      (-0.57, 44.84),
+    "Montpellier":   (3.88, 43.61),
+    "Toulouse":      (1.44, 43.60),
+
+    "Riga":          (24.10, 56.95),
+    "Vilnius":       (25.27, 54.68),
+    "Tallinn":       (24.75, 59.44),
+    "Berlin":        (13.40, 52.52),
+    "Brussels":      (4.35, 50.85),
+    "Danzig":        (18.65, 54.35),
+    "Ghent":         (3.72, 51.05),
+    "Turku":         (22.27, 60.45),
+    "Dublin":        (-6.26, 53.35),
+    "Oslo":          (10.75, 59.91),
+    "Paris":         (2.35, 48.86),
+    "Stockholm":     (18.07, 59.33),
+    "York":          (-1.08, 53.96),
+    "Novgorod":      (31.27, 58.52),
+    "Nurmberg":      (11.08, 49.45),
+    "Prague":        (14.42, 50.08),
+    "Lubeck":        (10.69, 53.87),
+    "London":        (-0.13, 51.51),
+    "Krakow":        (19.94, 50.06),
+    "Bern":          (7.45, 46.95),
+    "Erfurt":        (11.03, 50.98),
+    "Bruges":        (3.22, 51.21),
+    "Bergen":        (5.32, 60.39),
+    "Deventer":      (6.16, 52.25),
+    "Copenhagen":    (12.57, 55.68),
+    "Polotsk":       (28.80, 55.48),
+    "Wroclaw":       (17.03, 51.11),
+}
+
+def lonlat_to_xy(lon, lat, W, H, bounds=MAP_BOUNDS):
+    """Vienkārša lineāra projekcija no garuma/platuma uz Canvas pikseļiem."""
+    x = (lon - bounds["lon_min"]) / (bounds["lon_max"] - bounds["lon_min"]) * W
+    # y virziens uz leju — lielāka platuma vērtība = tuvāk ekrāna augšai
+    y = (bounds["lat_max"] - lat) / (bounds["lat_max"] - bounds["lat_min"]) * H
+    return x, y
+
+
+class MapView:
+    """
+    Vienā Canvas tiek zīmēts:
+      - pelēkas līnijas — grafa malas (tirdzniecības ceļi)
+      - melns aplis — dzīvie iedzīvotāji (N = S+I+R)
+      - sarkans aplis — inficētie (I)
+    """
+
+    def __init__(self, root, G, width=1920, height=1080, scale_k_alive=0.15, scale_k_inf=0.25, bg="white"):
+        self.root = root
+        self.G = G
+        self.W, self.H = width, height
+        self.scale_k_alive = scale_k_alive
+        self.scale_k_inf = scale_k_inf
+
+        self.canvas = tk.Canvas(root, width=self.W, height=self.H, bg=bg, highlightthickness=0)
+        self.canvas.pack()
+
+        # Pilsētu pikseļu koordinātas
+        self.xy = {}
+        for city in self.G.nodes:
+            lon, lat = COORDS[city.name]
+            self.xy[city] = lonlat_to_xy(lon, lat, self.W, self.H)
+
+        # Grafa malas (uzzīmē tikai vienreiz)
+        self.edge_ids = []
+        for u, v, data in self.G.edges(data=True):
+            x1, y1 = self.xy[u]
+            x2, y2 = self.xy[v]
+            self.edge_ids.append(self.canvas.create_line(x1, y1, x2, y2, fill="#cccccc", width=1))
+
+        # Pilsētu apļi un uzraksti (izveido vienreiz, vēlāk tikai maina coords)
+        self.node_art = {}  # city -> (outer_id, inner_id, label_id)
+        for city in self.G.nodes:
+            x, y = self.xy[city]
+
+            # Melnais aplis (dzīvie)
+            outer = self.canvas.create_oval(x-1, y-1, x+1, y+1, outline="black", width=2, fill="")
+
+            # Sarkanais aplis (inficētie)
+            inner = self.canvas.create_oval(x-1, y-1, x+1, y+1, outline="", fill="#ff0000")
+
+            # Nosaukums virs pilsētas
+            label = self.canvas.create_text(x, y-12, text=city.name, font=("Arial", 9))
+
+            self.node_art[city] = (outer, inner, label)
+
+    @staticmethod
+    def _bbox(cx, cy, r):
+        """Veido ovāla koordinātas no centra (cx, cy) un rādiusa r."""
+        r = max(0.0, r)
+        return (cx - r, cy - r, cx + r, cy + r)
+
+    def _r_alive(self, N):
+        """Rādiuss melnajam aplim (dzīvie)."""
+        if N <= 0:
+            return 0.0
+        return max(2.0, self.scale_k_alive * math.sqrt(N))
+
+    def _r_inf(self, I):
+        """Rādiuss sarkanajam aplim (inficētie)."""
+        if I <= 0:
+            return 0.0
+        return max(3.0, self.scale_k_inf * math.sqrt(I))
+
+    def update_city(self, city):
+        """Atjauno vienas pilsētas grafisko stāvokli."""
+        outer, inner, label = self.node_art[city]
+        x, y = self.xy[city]
+
+        N = city.S + city.I + city.R
+        I = city.I
+
+        rN = self._r_alive(N)
+        rI = self._r_inf(I)
+
+        # Melnais aplis (dzīvie)
+        if N > 0:
+            self.canvas.coords(outer, *self._bbox(x, y, rN))
+            self.canvas.itemconfigure(outer, state="normal")
+        else:
+            self.canvas.itemconfigure(outer, state="hidden")
+
+        # Sarkanais aplis (inficētie)
+        if I > 0:
+            self.canvas.coords(inner, *self._bbox(x, y, rI))
+            self.canvas.itemconfigure(inner, state="normal")
+            # Sarkanais vienmēr virs melnā
+            self.canvas.tag_raise(inner, outer)
+        else:
+            self.canvas.itemconfigure(inner, state="hidden")
+
+        # Uzraksts virs centrs–12px
+        self.canvas.coords(label, x, y - 12)
+
+    def update_all(self, day=None):
+        """Atjauno VISU pilsētu aplišus."""
+        for city in self.G.nodes:
+            self.update_city(city)
+        if day is not None:
+            self.root.title(f"Black Death map — Day {day}")
+
+
+def run_sim_with_tk(
+    G,
+    compute_commute_forces,
+    super_commute_spikes,
+    total_days=2554,
+    commute_rate=0.00012,
+    step_ms=40
+):
+    rng = random.Random(42)
+
+    root = tk.Tk()
+    root.state('zoomed')
+    root.update_idletasks()
+    W = root.winfo_width()
+    H = root.winfo_height()
+
+    view = MapView(root, G, width=W, height=H, scale_k_alive=0.15, scale_k_inf=0.25)
+
+    day_state = {"day": 0}
+
+    def one_step():
+        d = day_state["day"] + 1
+        day_state["day"] = d
+
+        # 1) ārējais infekcijas spiediens (pārvietošanās)
+        base_ext = compute_commute_forces(G, commute_rate=commute_rate)
+
+        # 2) reti “šoki” (kuģi utt.)
+        spike_ext = super_commute_spikes(G, d,
+            super_period=14,
+            super_prob=0.50,
+            events=2,
+            k_min=80, k_max=300,
+            spike_rate=0.0008,
+            rate_mult=80.0,
+            rng=rng
+        )
+
+        # Kopējais ārējais spiediens
+        ext = {u: base_ext[u] + spike_ext.get(u, 0.0) for u in G.nodes}
+
+        # 3) SIRD solis visām pilsētām
+        for city in G.nodes:
+            city.step(external_infection_force=ext[city])
+
+        # 4) Atjaunojam grafiku
+        view.update_all(day=d)
+
+        # 5) Plānojam nākamo dienu
+        if d < total_days:
+            root.after(step_ms, one_step)
+
+    # Sākuma attēlojums (0. diena)
+    view.update_all(day=0)
+    root.after(step_ms, one_step)
+    root.mainloop()
+
+
+# ==== PALAIŽAM TKINTER ANIMĀCIJU ====
+run_sim_with_tk(G, compute_commute_forces, super_commute_spikes)
