@@ -1,7 +1,3 @@
-"""
-The Black Death occurred in Europe from 1346 to 1353.
-"""
-
 import networkx as nx # Tīklu (grafu) bibliotēka: grafa virsotnes - pilsētas, grafa šķautnes - pilsētu savienojumi (tirdzniecības ceļi)
 import random
 from numpy.random import binomial
@@ -989,7 +985,7 @@ PARAM_LABELS = {
     "cap_frac": "Veselības sistēmas kapacitāte",
     "overload_mult": "Pārslodzes mirstības reizinātājs",
 
-    "commute_rate": "Starppilsētu mobilitāte",
+    "commute_rate": "Ceļošanas intensitāte",
 
     "super_period": "Uzliesmojumu biežums (dienas)",
     "super_prob": "Uzliesmojuma varbūtība",
@@ -1263,7 +1259,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes, total_days=
           KĀ DARBOJAS "MELNĀS NĀVES" SIMULĀCIJA?
 =======================================================
 
-Šī programma modelē epidēmijas izplatību 14. gadsimta Eiropas kartē. 
+Šī programma modelē mēra izplatību 14. gadsimta Eiropas kartē. 
 Simulācija notiek soli pa soli (solis = 1 diena).
 
 1. KAS NOTIEK PILSĒTAS IEKŠIENĒ? (SIRD MODELIS)
@@ -1294,7 +1290,7 @@ Pilsētas nav izolētas. Tās savieno tirdzniecības ceļi (līnijas kartē).
    - Jo lielāka pilsēta un intensīvāka satiksme, jo ātrāk mēris izplatās.
 
 4. ĀRKĀRTAS NOTIKUMI
-Papildus parastajai plūsmai, modelis simulē retus, negaidītus notikumus (piemēram, ostā ierodas kuģis ar inficētu apkalpi). Tas rada pēkšņus uzliesmojumus vietās, kas likās drošas.
+Papildus parastajai plūsmai, modelis simulē retus, negaidītus notikumus (piemēram, ostā ierodas kuģis ar inficētiem). Tas rada pēkšņus uzliesmojumus vietās, kas likās drošas.
 
 =======================================================
             KO NOZĪMĒ IEVADES PARAMETRI?
@@ -1305,7 +1301,7 @@ Papildus parastajai plūsmai, modelis simulē retus, negaidītus notikumus (piem
 > Inficēšanās varbūtība (β)
   Ko tas dara: Nosaka mēra lipīgumu. Tā ir varbūtība, ka veselais (S) saslims vienas dienas laikā, ja nonāks kontaktā.
   [Robežas]: 0.0 līdz 1.0 (decimālskaitlis).
-  (Piemēram: 0.1 nozīmē ļoti agresīvu mēra, 0.01 — lēnāku).
+  (Piemēram: 0.1 nozīmē ļoti lipīgu mēri, 0.01 — mazāk lipīgu mēri).
 
 > Izveseļošanās rādītājs (γ)
   Ko tas dara: Nosaka vidējo slimošanas ilgumu. Matemātiski: 1 / dienu skaits.
@@ -1332,7 +1328,7 @@ Papildus parastajai plūsmai, modelis simulē retus, negaidītus notikumus (piem
 --- MOBILITĀTE (ĢEOGRĀFIJA) ---
 
 > Starppilsētu migrācijas plūsma
-  Ko tas dara: Cik intensīvi infekcija ceļo starp pilsētām ikdienā (bez ārkārtas notikumiem).
+  Ko tas dara: Cik intensīvi mēris ceļo starp pilsētām ikdienā (bez ārkārtas notikumiem).
   [Robežas]: 0.0 līdz 1.0 (parasti ļoti mazs skaitlis, piem., 0.0001).
 
 --- ĀRKĀRTAS UZLIESMOJUMI (SUPER-SPREADERS) ---
@@ -1346,7 +1342,7 @@ Papildus parastajai plūsmai, modelis simulē retus, negaidītus notikumus (piem
   [Robežas]: 0.0 līdz 1.0 (piem., 0.5 = 50% iespēja).
 
 > Vienlaicīgo perēkļu skaits
-  Ko tas dara: Cik pilsētās vienlaicīgi parādīsies vīruss, ja notikums ir aktivizējies.
+  Ko tas dara: Cik pilsētās vienlaicīgi parādīsies mēris, ja notikums ir aktivizējies.
   [Robežas]: Vesels skaitlis >= 1.
 
 > Inficēto skaits perēklī (min / max)
