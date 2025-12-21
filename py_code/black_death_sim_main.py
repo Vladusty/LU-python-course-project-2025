@@ -973,7 +973,7 @@ def apply_global_params_to_cities(G, beta, gamma, mu, cap_frac, overload_mult):
     rng = random.Random(123)
     for c in G.nodes:
         c.beta = beta * rng.uniform(0.90, 1.10)
-        c.gamma = gamma * random.uniform(0.90, 1.10)
+        c.gamma = gamma * rng.uniform(0.90, 1.10)
         c.mu = mu * rng.uniform(0.85, 1.15)
         c.cap_frac = cap_frac * rng.uniform(0.8, 1.2)
         c.overload_mult = overload_mult
