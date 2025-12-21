@@ -333,10 +333,10 @@ def super_commute_spikes(
             index += 1
 
         # Paņemam attiecīgo kandidātu
-        source_city, target_city, w = candidates[index]
-
         if index >= len(weights):
             index = len(weights) - 1
+
+        source_city, target_city, w = candidates[index]
 
 
         N_u = target_city.S + target_city.I + target_city.R
