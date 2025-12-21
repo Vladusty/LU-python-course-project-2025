@@ -38,10 +38,6 @@ class City_SIRD:
         # cik daudz reižu var palielināties mirstība pie cap_frac pārpildīšanas.
         self.overload_mult = overload_mult
 
-    def state(self):
-        # Atgriež pašreizējo stāvokli (noapaļotu uz leju)
-        return {"S": int(self.S), "I": int(self.I), "R": int(self.R), "D": int(self.D)}
-
     def step(self, external_infection_force=0):
 
         # N - Dzīvie cilvēki (veselie + inficētie + recovered) (mirušie D netiek skaitīti)
@@ -127,7 +123,10 @@ class City_SIRD:
             remaining_after_rec = 0
 
         # Cik daudz nomira no palikušiem infected
-        died = binomial(remaining_after_rec, p_die / (p_die + p_stay))
+        if p_die + p_stay == 0:
+            died = 0
+        else:
+            died = binomial(remaining_after_rec, p_die / (p_die + p_stay))
 
         # Cik infected palika
         stay = remaining_after_rec - died
@@ -189,7 +188,7 @@ def compute_commute_forces(G: nx.Graph, commute_rate=0.001) -> dict[City_SIRD, f
             # Ja nav kaimiņu, nav ārēja spiediena
             total_edge_weight_from_city[city] = 0
         else:
-            total = 0.0
+            total = 0
             for neighbor_city, edge_data in neighbors:
                 weight = edge_data.get("weight", 1)
                 if weight < 0:
@@ -307,6 +306,8 @@ def super_commute_spikes(
     if total_weights == 0:
         return external_spike
 
+    if int(events) <= 0:
+        return external_spike
 
     jumps_to_draw = int(events)
     if jumps_to_draw < 1:
@@ -333,6 +334,9 @@ def super_commute_spikes(
 
         # Paņemam attiecīgo kandidātu
         source_city, target_city, w = candidates[index]
+
+        if index >= len(weights):
+            index = len(weights) - 1
 
 
         N_u = target_city.S + target_city.I + target_city.R
@@ -443,13 +447,12 @@ G = nx.Graph()
 cities = [
     feodosia, constantinople, thessaloniki, ragusa, venice, genoa,
     marseille, barcelona, palermo, naples, tunis, cairo, athens, florence,
-    sarai, burgos, bordeaux, montpellier, toulouse, riga, vilnius, tallinn, berlin, brussels, danzig, ghent, turku, dublin, oslo,
-    paris, stockholm, york, novgorod, nurmberg, prague, lubeck, london, krakow,
-    bern, erfurt, bruges, bergen, deventer, copenhagen, polotsk, wroclaw,
-    rome, moscow, sofia, belgrade, lviv
-    , cnapoca, debrecen, durres,
-    geneve, granada, kyiv, lisboa, milan, pest, suceava, seville, siena,
-    targoviste, toledo, trnovo, vienna, zagreb, zurich, fes, izmir, jerusalem, cologne, olomouc, rouen, yaroslavl, smolensk
+    sarai, burgos, bordeaux, montpellier, toulouse, riga, vilnius, tallinn, berlin,
+    brussels, danzig, ghent, turku, dublin, oslo, paris, stockholm, york, novgorod, nurmberg,
+    prague, lubeck, london, krakow, bern, erfurt, bruges, bergen, deventer, copenhagen,
+    polotsk, wroclaw, rome, moscow, sofia, belgrade, lviv , cnapoca, debrecen, durres,
+    geneve, granada, kyiv, lisboa, milan, pest, suceava, seville, siena, targoviste, toledo,
+    trnovo, vienna, zagreb, zurich, fes, izmir, jerusalem, cologne, olomouc, rouen, yaroslavl, smolensk
 ]
 
 for c in cities:
@@ -481,7 +484,6 @@ G.add_edge(constantinople, sofia,        weight=0.7)
 G.add_edge(cairo, venice,                weight=0.8)
 G.add_edge(cairo, genoa,                 weight=0.7)
 G.add_edge(cairo, jerusalem,             weight=0.5)
-G.add_edge(cairo, tunis,                 weight=0.9) 
 
 G.add_edge(thessaloniki, athens,         weight=1.2)
 G.add_edge(thessaloniki, venice,         weight=0.8)
@@ -492,6 +494,7 @@ G.add_edge(ragusa, venice,               weight=2.0)
 G.add_edge(ragusa, genoa,                weight=1.0)
 G.add_edge(ragusa, durres,               weight=1.2) 
 G.add_edge(ragusa, belgrade,             weight=0.7) 
+G.add_edge(ragusa, pest,                 weight=0.5)
 
 G.add_edge(venice, genoa,                weight=2.2)
 G.add_edge(venice, marseille,            weight=1.2)
@@ -500,7 +503,7 @@ G.add_edge(venice, florence,             weight=0.6)
 G.add_edge(venice, naples,               weight=0.8)
 G.add_edge(venice, rome,                 weight=0.5) 
 G.add_edge(venice, milan,                weight=0.7) 
-G.add_edge(venice, vienna,               weight=0.9) 
+G.add_edge(venice, prague,               weight=0.4)
 
 G.add_edge(genoa, marseille,             weight=1.8)
 G.add_edge(genoa, barcelona,             weight=1.3)
@@ -510,6 +513,7 @@ G.add_edge(genoa, tunis,                 weight=1.0)
 G.add_edge(marseille, tunis,             weight=1.0)
 G.add_edge(marseille, montpellier,       weight=1.2)
 G.add_edge(marseille, barcelona,         weight=2.0)
+G.add_edge(marseille, paris,             weight=0.4)
 
 G.add_edge(barcelona, tunis,             weight=0.8)
 G.add_edge(barcelona, granada,           weight=0.7)
@@ -517,10 +521,9 @@ G.add_edge(barcelona, seville,           weight=0.6)
 G.add_edge(barcelona, montpellier,       weight=1.3)
 G.add_edge(barcelona, burgos,            weight=0.8)
 
-G.add_edge(palermo, naples,              weight=1.0)
-
 G.add_edge(naples, genoa,                weight=0.9)
 G.add_edge(naples, rome,                 weight=0.7)
+G.add_edge(naples, palermo,              weight=1.0)
 
 G.add_edge(tunis, palermo,               weight=1.3)
 G.add_edge(tunis, cairo,                 weight=0.5)
@@ -528,11 +531,9 @@ G.add_edge(tunis, fes,                   weight=0.7)
 
 G.add_edge(fes, granada,                 weight=0.7)
 
-G.add_edge(montpellier, marseille,       weight=1.0)
-G.add_edge(montpellier, toulouse,        weight=0.8)
-
 G.add_edge(toulouse, bordeaux,           weight=0.9)
 G.add_edge(toulouse, granada,            weight=0.3)
+G.add_edge(toulouse, montpellier,        weight=0.8)
 
 G.add_edge(burgos, bordeaux,             weight=0.7)
 G.add_edge(burgos, toledo,               weight=0.6) 
@@ -545,15 +546,16 @@ G.add_edge(bordeaux, lisboa,             weight=0.5)
 
 G.add_edge(rome, florence,               weight=0.8) 
 G.add_edge(florence, siena,              weight=0.7) 
-G.add_edge(milan, geneve,                weight=0.8)
- 
+
 G.add_edge(geneve, zurich,               weight=0.6)
 G.add_edge(geneve, bern,                 weight=0.5)
- 
+G.add_edge(geneve, milan,               weight=0.8)
+
 G.add_edge(belgrade, sofia,              weight=0.6)
 G.add_edge(belgrade, pest,               weight=0.8) 
 
 G.add_edge(sofia, trnovo,                weight=0.5)
+
 G.add_edge(cnapoca, debrecen,            weight=0.4)
  
 G.add_edge(kyiv, lviv,                   weight=0.5) 
@@ -563,20 +565,14 @@ G.add_edge(kyiv, polotsk,                weight=0.3)
 G.add_edge(lviv, cnapoca,                weight=0.3)
 G.add_edge(lviv, krakow,                 weight=0.6) 
 
-G.add_edge(lisboa, seville,              weight=0.7) 
+G.add_edge(seville, lisboa,              weight=0.7)
 G.add_edge(seville, toledo,              weight=0.6) 
-G.add_edge(granada, seville,             weight=0.6) 
+G.add_edge(seville, granada,             weight=0.6)
 
-G.add_edge(ragusa, pest,                 weight=0.5) 
-G.add_edge(ragusa, belgrade,             weight=0.7) 
- 
 G.add_edge(vienna, pest,                 weight=0.6) 
-G.add_edge(vienna, zagreb,               weight=0.4) 
-
-
-G.add_edge(venice, vienna,               weight=0.9) 
-G.add_edge(genoa, milan,                 weight=1.0) 
-G.add_edge(milan, geneve,                weight=0.8)
+G.add_edge(vienna, zagreb,               weight=0.4)
+G.add_edge(vienna, krakow,               weight=0.8)
+G.add_edge(vienna, venice,               weight=0.9)
 
 # Baltic-North Sea pilsētas
 
@@ -584,7 +580,9 @@ G.add_edge(london, bruges,               weight=1.4)
 G.add_edge(london, paris,                weight=1.0)
 G.add_edge(london, bergen,               weight=0.3)
 G.add_edge(london, york,                 weight=0.8) 
-G.add_edge(london, dublin,               weight=0.7) 
+G.add_edge(london, dublin,               weight=0.7)
+
+G.add_edge(york, dublin,                 weight=0.5)
 
 G.add_edge(bruges, ghent,                weight=1.4)
 G.add_edge(bruges, deventer,             weight=0.7)
@@ -624,7 +622,7 @@ G.add_edge(prague, vienna,               weight=0.7)
 G.add_edge(stockholm, bergen,            weight=0.2)
 G.add_edge(stockholm, turku,             weight=0.6)
 G.add_edge(stockholm, copenhagen,        weight=0.8)
-G.add_edge(stockholm, tallinn,           weight=0.5) 
+G.add_edge(stockholm, tallinn,           weight=0.8)
 
 G.add_edge(oslo, bergen,                 weight=0.7)
 G.add_edge(oslo, copenhagen,             weight=0.4) 
@@ -635,13 +633,9 @@ G.add_edge(novgorod, smolensk,          weight=0.4)
 G.add_edge(novgorod, yaroslavl,         weight=0.3) 
 G.add_edge(novgorod, moscow,            weight=0.5)
 
-
 G.add_edge(polotsk, vilnius,             weight=0.6)
 G.add_edge(polotsk, smolensk,            weight=0.5) 
 
-G.add_edge(tallinn, stockholm,           weight=0.8)
-
-G.add_edge(erfurt, berlin,               weight=0.4)
 G.add_edge(erfurt, nurmberg,             weight=0.4)
 G.add_edge(erfurt, prague,               weight=0.3)
 G.add_edge(erfurt, bruges,               weight=0.3)
@@ -651,11 +645,6 @@ G.add_edge(brussels, ghent,              weight=0.7)
 G.add_edge(brussels, deventer,           weight=0.6)
 G.add_edge(brussels, cologne,            weight=0.5) 
 
-G.add_edge(york, london,                 weight=0.8)
-G.add_edge(york, dublin,                 weight=0.5)
-
-G.add_edge(dublin, london,               weight=0.7)
-
 G.add_edge(wroclaw, prague,              weight=0.6)
 G.add_edge(wroclaw, krakow,              weight=0.6)
 G.add_edge(wroclaw, olomouc,             weight=0.4) 
@@ -663,22 +652,7 @@ G.add_edge(wroclaw, olomouc,             weight=0.4)
 G.add_edge(cologne, deventer,            weight=0.7) 
 G.add_edge(cologne, rouen,               weight=0.4) 
 
-G.add_edge(yaroslavl, moscow,            weight=0.4) 
-
-G.add_edge(bern, paris,                  weight=0.5) 
-
-# Starpreģionālie sakari
-
-G.add_edge(geneve, bern,                 weight=0.5) 
-
-G.add_edge(marseille, paris,             weight=0.4)
-
-G.add_edge(vienna, prague,               weight=0.7) 
-
-G.add_edge(lviv, krakow,                 weight=0.6) 
-
-G.add_edge(krakow, vienna,               weight=0.8)
-G.add_edge(prague, venice,               weight=0.4)
+G.add_edge(yaroslavl, moscow,            weight=0.4)
 
 
 initial_pop = {}
@@ -686,65 +660,12 @@ for c in G.nodes:
     initial_pop[c] = c.S + c.I + c.R + c.D
 
 
-
-rng = random.Random(123)
-
-for c in G.nodes:
-    c.beta *= rng.uniform(0.9, 1.1)
-    c.mu   *= rng.uniform(0.9, 1.1)
-    c.cap_frac *= rng.uniform(0.8, 1.2)
-
-
-
-'''
-# ==== SIMULĀCIJA  ====
-rng = random.Random(42)
-for day in range(1, 2555):
-    base_ext = compute_commute_forces(G, commute_rate=0.00012)
-
-    spike_ext = super_commute_spikes(
-        G, day,
-        super_period=14,
-        super_prob=0.50,
-        events=2,
-        k_min=80, k_max=300,
-        spike_rate=0.0008,
-        rate_mult=80.0,
-        rng=rng
-    )
-
-    ext = {}
-    for u in G.nodes:
-        ext[u] = base_ext[u] + spike_ext.get(u, 0.0)
-
-    for city in G.nodes:
-        city.step(external_infection_force=ext[city])
-
-    print(f"\nDay {day}")
-    for city in G.nodes:
-        s = city.state()
-        N = city.S + city.I + city.R
-        print(f"{city.name:9s} |  N={N:.0f}, S={s['S']:.0f}, I={s['I']:.0f}, R={s['R']:.0f}, D={s['D']:.0f}")
-
-
-print("\nResults:")
-for c in G.nodes:
-    N0 = initial_pop[c]
-
-    if N0 > 0:
-        IFR = c.D / N0
-    else:
-        IFR = float('nan')
-
-    print(f"{c.name:12s} D={int(c.D):7d}  N0={int(N0):7d}  IFR={IFR:.3f}  ({IFR * 100:.1f}%)")
-'''
-
 # ==== TKINTER KARTE PĒC MODEĻA UN GRAFA ====
 
 # Kartes robežas (nosacīta "Eiropa + Austrumi")
 MAP_BOUNDS = dict(
     lon_min=-10.0,  # rietumos aiz Ibērijas
-    lon_max=50.0,   # austrumos aiz Sarat
+    lon_max=50.0,   # austrumos aiz Sarai
     lat_min=30.0,   # nedaudz dienvidos no Kairas
     lat_max=62.0    # ziemeļos virs Bergen / Turku
 )
@@ -970,12 +891,11 @@ def apply_global_params_to_cities(G, beta, gamma, mu, cap_frac, overload_mult):
     Uzliek vienus un tos pašus bāzes parametrus visām pilsētām.
     Nelielas atšķirības tiek saglabātas ar nejaušiem reizinātājiem.
     """
-    rng = random.Random(123)
     for c in G.nodes:
-        c.beta = beta * rng.uniform(0.90, 1.10)
-        c.gamma = gamma * rng.uniform(0.90, 1.10)
-        c.mu = mu * rng.uniform(0.85, 1.15)
-        c.cap_frac = cap_frac * rng.uniform(0.8, 1.2)
+        c.beta = beta * random.uniform(0.90, 1.10)
+        c.gamma = gamma * random.uniform(0.90, 1.10)
+        c.mu = mu * random.uniform(0.85, 1.15)
+        c.cap_frac = cap_frac * random.uniform(0.8, 1.2)
         c.overload_mult = overload_mult
 
 
@@ -1003,7 +923,7 @@ PARAM_LABELS = {
     "step_ms": "Animācijas ātrums (ms)"
 }
 
-def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes, total_days=2554, step_ms=40):
+def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
     """
     1) Parāda parametru ievades logu (globālie parametri).
     2) Atver atsevišķu logu ar pilsētu sarakstu, kur var iestatīt sākotnējos saslimušos.
@@ -1059,9 +979,11 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes, total_days=
 
     def parse_param(name):
         """Nolasa vienu parametru no Entry, pārvērš uz vajadzīgo tipu."""
+        # Она берет param_entries и param_types из области видимости run_sim_with_tk
         txt = param_entries[name].get().strip()
         default = DEFAULT_PARAMS[name]
         typ = param_types[name]
+
         if txt == "":
             return default
         try:
@@ -1070,9 +992,102 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes, total_days=
             return default
         return val
 
+
+    def is_float(s):
+        s = s.strip().replace(",", ".")
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+
+    def is_int(s):
+        s = s.strip()
+        if s == "":
+            return False
+        # lai "12.3" netiktu int laukā
+        if "." in s or "," in s:
+            return False
+        try:
+            int(s)
+            return True
+        except ValueError:
+            return False
+
+    def validate_inputs():
+        """
+        Pārbauda visus laukus.
+        Ja ir kļūda -> next_btn disabled.
+        """
+        ok = True
+        msg = ""
+
+        # (1) float lauki
+        float_fields = ["beta", "gamma", "mu", "cap_frac", "overload_mult",
+                        "commute_rate", "super_prob", "spike_rate", "rate_mult"]
+
+        for name in float_fields:
+            txt = param_entries[name].get().strip()
+            if not is_float(txt):
+                ok = False
+                msg = f"Kļūda: {name} nav decimālskaitlis"
+                break
+
+        # (2) int lauki
+        if ok:
+            int_fields = ["super_period", "events", "k_min", "k_max", "total_days", "step_ms"]
+            for name in int_fields:
+                txt = param_entries[name].get().strip()
+                if not is_int(txt):
+                    ok = False
+                    msg = f"Kļūda: {name} nav vesels skaitlis"
+                    break
+
+        # (3) minimālās robežas
+        if ok:
+            super_period = int(param_entries["super_period"].get())
+            k_min = int(param_entries["k_min"].get())
+            k_max = int(param_entries["k_max"].get())
+            total_days = int(param_entries["total_days"].get())
+            step_ms = int(param_entries["step_ms"].get())
+
+            if super_period < 1:
+                ok = False
+                msg = "Kļūda: super_period jābūt >= 1"
+            elif k_min < 1:
+                ok = False
+                msg = "Kļūda: k_min jābūt >= 1"
+            elif k_max < k_min:
+                ok = False
+                msg = "Kļūda: k_max nedrīkst būt mazāks par k_min"
+            elif total_days < 1:
+                ok = False
+                msg = "Kļūda: total_days jābūt >= 1"
+            elif step_ms < 1:
+                ok = False
+                msg = "Kļūda: step_ms jābūt >= 1"
+
+        # rezultāts: poga + statuss
+        if ok:
+            status_var.set("")
+            next_btn.config(state="normal")
+        else:
+            status_var.set(msg)
+            next_btn.config(state="disabled")
+
+        return ok
+
+    def bind_validation(entry):
+        entry.bind("<KeyRelease>", lambda e: validate_inputs())
+        entry.bind("<FocusOut>",  lambda e: validate_inputs())
+
+    # piesienam validāciju visiem Entry
+    for e in param_entries.values():
+        bind_validation(e)
+
     def show_initial_infected_window(sim_params):
         """
-        Atver JAUNU logu (Toplevel) ar pilsētu sarakstu un ritjoslu, lai iestatītu sākotnējos saslimušos.
+        Atver jaunu logu ar pilsētu sarakstu un ritjoslu, lai iestatītu sākotnējos saslimušos.
         """
         inf_win = tk.Toplevel(root)
         inf_win.title("Sākotnējie saslimušie pa pilsētām")
@@ -1099,11 +1114,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes, total_days=
 
         # Saturs: virsraksts + pilsētu saraksts
         row2 = 0
-        tk.Label(
-            inner_frame,
-            text="Sākotnējie saslimušie (I) katrā pilsētā:",
-            font=("Arial", 10, "bold")
-        ).grid(row=row2, column=0, columnspan=2, sticky="w", padx=5, pady=(5, 8))
+        tk.Label(inner_frame, text="Sākotnējie saslimušie (I) katrā pilsētā:", font=("Arial", 10, "bold")).grid(row=row2, column=0, columnspan=2, sticky="w", padx=5, pady=(5, 8))
         row2 += 1
 
         infected_entries = {}
@@ -1203,6 +1214,9 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes, total_days=
         """
         Pēc globālo parametru ievades atver logu ar sākotnējiem saslimušajiem.
         """
+        if not validate_inputs():
+            return
+
         beta = parse_param("beta")
         gamma = parse_param("gamma")
         mu = parse_param("mu")
@@ -1387,6 +1401,7 @@ Papildus parastajai plūsmai, modelis simulē retus, negaidītus notikumus (piem
 
     next_btn = tk.Button(form, text="Turpināt", command=on_next)
     next_btn.grid(row=row + 2, column=0, columnspan=2, pady=(10, 2))
+    validate_inputs()
 
     # Poga "i" (info)
     info_btn = tk.Button(form, text="info", command=show_info_window, fg="blue")
