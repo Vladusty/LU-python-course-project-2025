@@ -1263,6 +1263,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
         }
 
         # Parametru formu var iznīcināt (lai paliek tikai jaunie logi)
+        root.withdraw()
         form.destroy()
 
         # Atver otro logu ar pilsētu sarakstu
@@ -1384,10 +1385,23 @@ Papildus parastajai plūsmai, modelis simulē retus, negaidītus notikumus (piem
 """
 
     def show_info_window():
+        # Uzreiz atslēdzam pogu "info", lai nevarētu atvērt vairākus logus
+        info_btn.config(state="disabled")
+
         info_win = tk.Toplevel(root)
         info_win.title("Informācija")
 
-        # Izveidojam teksta lauku ar ritjoslu
+        # Funkcija, kas izpildās, kad info logs tiek aizvērts (ar X vai ar destroy)
+        def on_close():
+            # Vispirms iznīcinām info logu
+            info_win.destroy()
+            # Pēc tam atkal aktivizējam pogu "info"
+            info_btn.config(state="normal")
+
+        # Noķeram aizvēršanu ar loga krustiņu (WM_DELETE_WINDOW)
+        info_win.protocol("WM_DELETE_WINDOW", on_close)
+
+        # Teksta lauks ar ritjoslu
         text_area = tk.Text(info_win, wrap="word", padx=10, pady=10, width=60, height=20)
         text_area.pack(side="left", fill="both", expand=True)
 
@@ -1395,7 +1409,7 @@ Papildus parastajai plūsmai, modelis simulē retus, negaidītus notikumus (piem
         scroll.pack(side="right", fill="y")
         text_area.config(yscrollcommand=scroll.set)
 
-        # Ievietojam tekstu un padarām to lasāmu (readonly)
+        # Ieliekam tekstu un padarām lauku readonly
         text_area.insert("1.0", info_text)
         text_area.config(state="disabled")
 
