@@ -1256,7 +1256,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes, total_days=
 
     # --- INFO POGAS FUNKCIONALITĀTE ---
 
-    info_text = info_text = """=======================================================
+    info_text =  """=======================================================
           KĀ DARBOJAS "MELNĀS NĀVES" SIMULĀCIJA?
 =======================================================
 
