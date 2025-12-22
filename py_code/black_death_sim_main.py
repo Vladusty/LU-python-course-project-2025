@@ -1168,7 +1168,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
             view = MapView(root, G, width=W, height=H, scale_k_alive=0.15, scale_k_inf=0.25)
 
             day_state = {"day": 0}
-            rng_shocks = random.Random(42)
+            rng_shocks = random
 
             total_days_loc = sim_params["total_days"]
             step_ms_loc = sim_params["step_ms"]
