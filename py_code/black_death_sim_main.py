@@ -97,7 +97,7 @@ class City_SIRD:
 
         # === JAUNIE INFICĒTIE ===
         S_int = int(self.S)
-        new_infected = int(binomial(S_int, p_inf))
+        new_infected = binomial(S_int, p_inf)
 
         # === APRĒĶINI I GRUPAI ===
         I_int = int(self.I)
