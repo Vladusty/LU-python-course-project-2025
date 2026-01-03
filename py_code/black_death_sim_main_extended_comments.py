@@ -1,8 +1,8 @@
-import networkx as nx # Tīklu (grafu) bibliotēka: grafa virsotnes - pilsētas, grafa šķautnes - pilsētu savienojumi (tirdzniecības ceļi)
+import networkx as nx # tīklu (grafu) bibliotēka: grafa virsotnes - pilsētas, grafa šķautnes - pilsētu savienojumi (tirdzniecības ceļi)
 import random
 from numpy.random import binomial
 import tkinter as tk
-from math import sqrt # Kvadrātsakne, nepieciešama apļu rādiusa aprēķināšanai vizualizācijā
+from math import sqrt # kvadrātsakne, nepieciešama apļu rādiusa aprēķināšanai vizualizācijā
 
 
 """
@@ -12,9 +12,9 @@ Programma modelē mēra izplatību pilsētu tīklā, izmantojot lokālu SIRD epi
 1) City_SIRD klase
    Katra pilsēta tiek modelēta ar lokālu SIRD modeli (S - uzņēmīgie, I – inficētie, R – izveseļojušies, D – mirušie).
    Viens simulācijas solis atbilst vienai dienai, kuras laikā tiek aprēķināts:
-      - jauno saslimušo skaits, 
+      - jauno saslimušo skaits
       - izveseļojušo skaits
-      - mirušo skaits.
+      - mirušo skaits
    Ja inficēto īpatsvars pārsniedz noteikto kapacitātes slieksni, tad mirstības varbūtība pilsētā pieaug, modelējot veselības sistēmas pārslodzi.
 
 2) networkx.Graph (pilsētu tīkls):
@@ -53,7 +53,7 @@ class City_SIRD:
         self.name = name  # pilsētas nosaukums
 
         # SIRD sākotnējie stāvokļi
-        self.S = population - initial_infected # Veselie ir visi mīnus tie, kas jau slimi
+        self.S = population - initial_infected # veselie ir visi mīnus tie, kas jau slimi
         self.I = initial_infected
         self.R = 0                # sākumā neviens nav izveseļojies
         self.D = 0                # sākumā neviens nav miris
@@ -206,36 +206,45 @@ class City_SIRD:
 
 def compute_commute_forces(G: nx.Graph, commute_rate=0.001) -> dict[City_SIRD, float]:
     """
-    Aprēķina ārējo infekcijas ienesumu katrai pilsētai, balstoties uz tirdzniecību starp pilsētām.
-    Populācijas S/I/R netiek mainītas, tikai atgriež ārējo spiedienu (external_infection_force koeficientu).
+    Aprēķina, cik liels ārējais infekcijas spiediens iedarbojas uz katru pilsētu no citām pilsētām pa tirdzniecības ceļiem.
+
+    NEMAINA pilsētu iedzīvotāju skaitu (S, I, R, D),
+    Funkcija tikai aprēķina papildu koeficientu (external_infection_force), kas vēlāk palielina saslimšanas varbūtību pilsētā.
 
     IDEJA:
-    Katra pilsēta u saņem "ārējo infekcijas spiedienu" no visām kaimiņu pilsētām v. ("var iedomāties kā infekciju staru")
+    Katra pilsēta u saņem "ārējo infekcijas spiedienu" no visām kaimiņu pilsētām v (var iedomāties kā infekciju staru)
     Pieņēmums: jo spēcīgāka ir saikne v→u (tirdzniecības/intensitātes svars), un jo lielāka inficēto daļa v (I_v/N_v), jo lielāks ir infekcijas ienesums uz u.
     """
 
-    # === REZULTĀTA SĀKOTNĒJĀ TABULA (0 katrai pilsētai) ===
-    # Izveidojam tukšu vārdnīcu ārējās infekcijas spiedienam
+    # --------------------------------------------------
+    # 0) Sagatavojam rezultātu vārdnīcu
+    # --------------------------------------------------
+
+    # Šeit glabāsim ārējo infekcijas spiedienu katrai pilsētai
     external_infection_force = {}
 
-    # Katrai pilsētai piešķiram sākotnējo vērtību 0.0 (external_infection_force)
+    # sākumā visām pilsētām ārējais spiediens ir 0 (external_infection_force = 0)
     for city in G.nodes:
         external_infection_force[city] = 0
 
-    # === 1) APREĶINĀM SUM_W(v) KATRAI PILSĒTAI ===
-    # sum_w(v) = visu izejošo šķautņu svaru summa
+    # --------------------------------------------------
+    # 1) Aprēķinām katras pilsētas savienojumu kopējo svaru
+    # --------------------------------------------------
+
+    # Šī vārdnīca glabā, cik “spēcīgi” katra pilsēta ir savienota ar citām
+    # (visu tās ceļu svaru summa)
     total_edge_weight_from_city = {}
 
     for city in G.nodes: # ejam cauri katrai city in G.nodes
         neighbors = list(G[city].items())  # visi kaimiņi
 
         if len(neighbors) == 0:
-            # Ja nav kaimiņu, nav ārēja spiediena
+            # Ja pilsētai nav savienojumu, tā nevar nodot infekciju citām
             total_edge_weight_from_city[city] = 0
         else:
             total = 0
             for neighbor_city, edge_data in neighbors:
-                weight = edge_data.get("weight", 1)
+                weight = edge_data.get("weight", 1) # Paņemam ceļa svaru (ja nav, pieņemam 1)
                 if weight < 0:
                     weight = 0  # negatīvs svars nav atļauts
                 total += weight
@@ -244,55 +253,66 @@ def compute_commute_forces(G: nx.Graph, commute_rate=0.001) -> dict[City_SIRD, f
 
 
     # === 2) APRĒĶINĀM IENĀKOŠO INFEKCIJAS SPIEDIENI KATRAI PILSĒTAI ===
-    for target_city in G.nodes:                        # pilsēta, kas SAŅEM infekciju
-        for source_city, edge_data in G[target_city].items():  # Pilsēta, kas NODOD infekciju
-            weight_uv = edge_data.get("weight", 1)
+    # target_city - pilsēta, uz kuru nāk infekcija
+    for target_city in G.nodes:                                #  target_city - pilsēta, kas SAŅEM infekciju
+        for source_city, edge_data in G[target_city].items():  # source_city - pilsēta, kas NODOD infekciju (no kuras infekcija nāk)
+            weight_uv = edge_data.get("weight", 1) # Ceļa svars starp source_city un target_city
             if weight_uv < 0:
                 weight_uv = 0
 
             # Summa visiem source_city savienojumiem
             total_w = total_edge_weight_from_city[source_city]
 
-            # Ja avota pilsētai nav maršrutu (nav transporta) – izlaižam
+            # Ja source_city nav savienojumu, tā neko nenodod
             if total_w <= 0.0:
                 continue
 
-            # Dzīvā populācija avota pilsētā
+            # Dzīvo iedzīvotāju skaits source_city pilsētā
             N_v = source_city.S + source_city.I + source_city.R
-            if N_v <= 0:
-                continue  # pilsēta izmirusi
 
+            # Ja pilsēta ir izmirusi, no tās infekcija nenāk
+            if N_v <= 0:
+                continue
+
+            # Inficēto īpatsvars avota pilsētā
             infected_ratio = source_city.I / N_v  # I_v / N_v
 
-            # Pieskaitām infekcijas ienesumu
+            # Pieskaitām ārējo infekcijas spiedienu mērķa pilsētai
+            # Jo lielāks ceļa svars un vairāk slimo avotā, jo lielāks spiediens
             external_infection_force[target_city] += commute_rate * (weight_uv / total_w) * infected_ratio
 
 
-    # === ATGRIEŽAM APRĒĶINĀTOS ĀRĒJOS SPIEDIENA KOEFICIENTUS (kā dict) ===
+    # ATGRIEŽAM APRĒĶINĀTOS ĀRĒJOS SPIEDIENA KOEFICIENTUS (kā dict)
     return external_infection_force
 
 
 def super_commute_spikes(
     G,
     day,
-    super_period = 14,       # ik pa N dienām pārbaudām
-    super_prob = 0.50,    # varbūtība, ka šajā dienā notikums notiek
-    events = 2,             # cik 'lēciens' (v->u) tiks izspēlēti
-    k_min = 100,            # kontaktu 'paciņas' minimālais lielums
-    k_max = 300,            # kontaktu 'paciņas' maksimālais lielums
-    spike_rate = 0.0008,    # mērogs (tās pašas vienības, kas commute_rate)
-    rate_mult = 80.0,     # cik reizes stiprāks par parasto ienesumu
+    super_period = 14,      # ik pa N dienām pārbaudām, vai notiek “liels notikums”
+    super_prob = 0.50,      # ja super_period diena pienākusi, tad ar varbūtību super_prob "liels notikums" tiešām notieks šajā dienā
+    events = 2,             # cik “lēcienus” (no vienas pilsētas uz citu) izspēlējam vienā notikumā
+    k_min = 100,            # minimālais kontaktu skaits lielā notikumā
+    k_max = 300,            # maksimālais kontaktu skaits lielā notikumā
+    spike_rate = 0.0008,    # bāzes stiprums (tāds pats “mērogs” kā commute_rate)
+    rate_mult = 80.0,       # cik reizes stiprāks par parasto ienesumu
     rng = None
 ) -> dict[City_SIRD, float]:
     """
+    Aprēķina “lielo notikumu” papildus ārējo infekcijas spiedienu konkrētajā dienā.
+
+    Šī funkcija:
+    NEMAINA S/I/R/D (tā neieliek cilvēkus tieši I).
+    Funkcija tikai atgriež external_spike[u], ko pēc tam pieskaita pie ārējā spiediena, un tas palielina saslimšanas varbūtību City_SIRD.step() metodē.
+
     Atgriež: {pilsēta: papildus ārējais infekcijas spiediens} konkrētajā dienā.
     S/I/R/D NETIEK mainīti.
 
     IDEJA:
-    - Reti (reizi super_period dienās) un ar varbūtību super_prob notiek 'liels notikums' (jeb šoks) (piem., kuģa ierašanās).
+    Reti (reizi super_period dienās) un ar varbūtību super_prob notiek 'liels notikums' (piem., kuģa ierašanās), kas izraisa pēkšņu uzliesmojumu kādā pilsētā.
     """
 
-    # Ja nav padots rng, izmantojam standarta random moduli
+    # Ja nav padots savs rng, tad izmantojam standarta random moduli
     if rng is None:
         rng = random
 
@@ -302,7 +322,10 @@ def super_commute_spikes(
         external_spike[city] = 0.0
 
 
-    # === KALENDĀRA UN VARBŪTĪBAS TRIGGERS ===
+    # --------------------------------------------------
+    # 1) Pārbaudām, vai šodien vispār var notikt “lielais notikums”
+    # --------------------------------------------------
+
     # Ja super_period ir 0 vai mazāks, tad "lielie notikumi" nekad nenotiek
     if super_period <= 0:
         return external_spike
@@ -311,56 +334,70 @@ def super_commute_spikes(
     if (day % super_period) != 0:
         return external_spike
 
-    # Pat ja diena der, notikums notiek tikai ar varbūtību super_prob
+    # Pat ja diena der, tad notikums notiek tikai ar varbūtību super_prob
     if rng.random() >= super_prob:
         return external_spike
 
 
-    # === KANDIDĀTU APKOPE: v->u ar svariem ~ w * (I_v/N_v) ====
-    candidates = []   # saraksts ar (v, u, w)
-    weights = []      # atbilstošie svari izvēlei
+    # --------------------------------------------------
+    # 2) Savācam kandidātus: no kuras pilsētas uz kuru var trāpīt “lielais notikums”
+    # --------------------------------------------------
+
+    candidates = []   # candidates glabā maršrutus (source_city -> target_city) ar svaru w
+    weights = []      # weights glabā “izlozes svarus” (kuras pārejas biežāk izvēlēties)
 
     for source_city in G.nodes:
-        N_v = source_city.S + source_city.I + source_city.R
+        N_v = source_city.S + source_city.I + source_city.R # source_city pilsētas dzīvie iedzīvotāji
         if N_v <= 0:
-            continue
-        if source_city.I <= 0:
+            continue # source_city pilsēta izmirusi
+
+        if source_city.I <= 0: # Ja avotā nav slimo, tad nav jēgas no šī avota taisīt "lielo notikumu"
             continue
 
-        infected_ratio = source_city.I / N_v  # I_v / N_v
+        infected_ratio = source_city.I / N_v  # I_v / N_v (Cik liela daļa source_city pilsētā ir slimi)
 
+        # Paskatāmies, uz kurām pilsētām avots ir savienots (pa grafa šķautnēm)
         for target_city, edge_data in G[source_city].items():
             w = edge_data.get("weight", 1)
             w = max(0.0, w)
+
+            # Ja svars 0, tad savienojums faktiski neko nenozīmē
             if w <= 0.0:
                 continue
 
             candidates.append((source_city, target_city, w))
+
+            # Izlozes svars: stiprāks ceļš + vairāk slimo avotā => biežāk izvēlas
             weights.append(w * infected_ratio)
 
-    # Ja nav kandidātu
+    # Ja nav neviena kandidāta, tad "lielais notikums" neko nevar izdarīt
     if len(candidates) < 1:
         return external_spike
 
-    # Saskaitām svarus pavisam vienkārši
+    # Ja visi svari ir 0, tad arī nav ko izlozēt
     total_weights = 0
     for w in weights:
-        total_weights = total_weights + w
+        total_weights += w
 
     # Ja svars = 0, tad nav iespējams izvēlēties nevienu kandidātu
     if total_weights == 0:
         return external_spike
 
+    # Ja events <= 0, tad neviens “lēciens” vispār nenotiek
     if int(events) <= 0:
         return external_spike
 
+    # Cik lēcienus izspēlēsim (drošībai vismaz 1)
     jumps_to_draw = int(events)
     if jumps_to_draw < 1:
         jumps_to_draw = 1
 
+    # --------------------------------------------------
+    # 3) Izlozējam konkrētus “lēciens” un pievienojam spiedienu mērķa pilsētām
+    # --------------------------------------------------
 
     for _ in range(jumps_to_draw):
-        # Kopējais svaru lielums
+        # Kopējais izlozes svaru lielums (vajadzīgs ruletes izvēlei)
         total_weight = 0.0
         for w in weights:
             total_weight += w
@@ -368,7 +405,7 @@ def super_commute_spikes(
         # Izvēlamies nejaušu skaitli intervālā [0; total_weight)
         r = rng.random() * total_weight
 
-        # Vienkārša loterija: ejam cauri svariem, līdz sasniedzam r
+        # “ruletes” izvēle: ejam cauri svariem, līdz sasniedzam r
         cum = 0.0
         index = 0
         while index < len(weights):
@@ -377,30 +414,33 @@ def super_commute_spikes(
                 break
             index += 1
 
-        # Paņemam attiecīgo kandidātu
+        # Drošības gadījumam (ja aizgāja ārpus robežas)
         if index >= len(weights):
             index = len(weights) - 1
 
+        # Paņemam izvēlēto maršrutu
         source_city, target_city, w = candidates[index]
 
-
+        # Mērķa pilsētā jābūt dzīvajiem iedzīvotājiem
         N_u = target_city.S + target_city.I + target_city.R
         if N_u <= 0.0:
-            continue  # mērķis 'izmiris' — šoks nepiemērojas
+            continue # mērķa pilsēta izmirusi
 
+        # Nejaušs kontaktu skaits (cik “cilvēku kontaktu” notika "lielā notikuma" dēļ)
         contacts_k = rng.randint(k_min, k_max)
 
+        # Pievienojam papildus ārējo spiedienu mērķa pilsētai
+        # Dalām ar N_u, lai lielās pilsētās tas pats contacts_k dotu mazāku relatīvo efektu
         external_spike[target_city] += rate_mult * spike_rate * (contacts_k / N_u)
 
 
-
-    # === REZULTĀTS ===
+    # Atgriežam papildus spiedienu katrai pilsētai
     return external_spike
 
 
 # ==== IZVEIDOJAM TĪKLU ====
 
-# Vidusjūra
+# Vidusjūra (virsotnes, ar populācijas skaitu, initial_infected skaitu un nosaukumu)
 feodosia        = City_SIRD(40000,   initial_infected=0, name="Feodosia")
 constantinople  = City_SIRD(150000,  initial_infected=0, name="Constantinople")
 thessaloniki    = City_SIRD(120000,  initial_infected=0, name="Thessaloniki")
@@ -504,7 +544,7 @@ for c in cities:
     G.add_node(c)
 
 # === EDGES ====
-# Vidusjūras pilsētas sakari
+# Vidusjūras pilsētas sakari (šķautnes)
 G.add_edge(targoviste, constantinople,    weight=0.3)
 G.add_edge(targoviste, belgrade,          weight=0.3)
 G.add_edge(targoviste, trnovo,            weight=0.3)
@@ -913,21 +953,21 @@ class MapView:
 # ==== NOKLUSĒJUMA PARAMETRI VISĀM PILSĒTĀM UN TĪKLAM ====
 
 DEFAULT_PARAMS = {
-    "beta":         0.099,
-    "gamma":        0.0225,
-    "mu":           0.009,
-    "cap_frac":     0.08,
-    "overload_mult":1.0,
-    "commute_rate": 0.00012,
-    "super_period": 14,
-    "super_prob":   0.50,
-    "events":       2,
-    "k_min":        80,
-    "k_max":        300,
-    "spike_rate":   0.0008,
-    "rate_mult":    80.0,
-    "total_days": 2554,
-    "step_ms": 40,
+    "beta":          0.099,
+    "gamma":         0.0225,
+    "mu":            0.009,
+    "cap_frac":      0.08,
+    "overload_mult": 1.0,
+    "commute_rate":  0.00012,
+    "super_period":  14,
+    "super_prob":    0.50,
+    "events":        2,
+    "k_min":         80,
+    "k_max":         300,
+    "spike_rate":    0.0008,
+    "rate_mult":     80.0,
+    "total_days":    2554,
+    "step_ms":       40,
 }
 
 
