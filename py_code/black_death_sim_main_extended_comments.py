@@ -59,8 +59,8 @@ class City_SIRD:
         self.D = 0                # sākumā neviens nav miris
 
         self.beta = beta          # inficēšanās varbūtība par vienu dienu (lipīgums) (koeficients)
-        self.gamma = gamma        # izveseļošanas varbūtība par vienu dienu.
-        self.mu = mu              # nomiršanas varbūtība par vienu dienu. random, lai dažādas pilsētas būtu nejauša nomiršanas varbūtība (mu) (lai tas atšķīras)
+        self.gamma = gamma        # izveseļošanas varbūtība par vienu dienu
+        self.mu = mu              # nomiršanas varbūtība par vienu dienu (vēlāk visām pilsētām uzliekam nelielu nejaušu variāciju)
 
         # pilsētas "veselības sistēmas kapacitāte".
         # Tas ir nepieciešams lai realizētu šo ideju:
@@ -441,89 +441,89 @@ def super_commute_spikes(
 # ==== IZVEIDOJAM TĪKLU ====
 
 # Vidusjūra (virsotnes, ar populācijas skaitu, initial_infected skaitu un nosaukumu)
-feodosia        = City_SIRD(40000,   initial_infected=0, name="Feodosia")
-constantinople  = City_SIRD(150000,  initial_infected=0, name="Constantinople")
-thessaloniki    = City_SIRD(120000,  initial_infected=0, name="Thessaloniki")
-ragusa          = City_SIRD(30000,   initial_infected=0, name="Ragusa")
-venice          = City_SIRD(150000,  initial_infected=0, name="Venice")
-genoa           = City_SIRD(90000,   initial_infected=0, name="Genoa")
-marseille       = City_SIRD(31000,   initial_infected=0, name="Marseille")
-barcelona       = City_SIRD(48000,   initial_infected=0, name="Barcelona")
-palermo         = City_SIRD(51000,   initial_infected=0, name="Palermo")
-naples          = City_SIRD(55000,   initial_infected=0, name="Naples")
-athens          = City_SIRD(25000,   initial_infected=0, name="Athens")
-florence        = City_SIRD(110000,  initial_infected=0, name="Florence")
-rome            = City_SIRD(40000,  initial_infected=0, name="Rome")
-moscow          = City_SIRD(25000, initial_infected=0, name="Moscow")
-sofia           = City_SIRD(20000, initial_infected=0, name="Sofia")
-belgrade        = City_SIRD(20000, initial_infected=0, name="Belgrade")
-lviv            = City_SIRD(10000, initial_infected=0, name="Lviv")
-cnapoca         = City_SIRD(5000, initial_infected=0, name="Cluj-Napoca")
-debrecen        = City_SIRD(3000, initial_infected=0, name="Debrecen")
-durres          = City_SIRD(25000, initial_infected=0, name="Durres")
-burgos          = City_SIRD(25000,  initial_infected=0, name="Burgos")
-bordeaux        = City_SIRD(35000,  initial_infected=0, name="Bordeaux")
-montpellier     = City_SIRD(35000,  initial_infected=0, name="Montpellier")
-toulouse        = City_SIRD(30000,  initial_infected=0, name="Toulouse")
-geneve          = City_SIRD(4000,  initial_infected=0, name="Geneve")
-granada         = City_SIRD(150000, initial_infected=0, name="Granada")
-kyiv            = City_SIRD(20000, initial_infected=0, name="Kyiv")
-lisboa          = City_SIRD(35000, initial_infected=0, name="Lisboa")
-milan           = City_SIRD(120000, initial_infected=0, name="Milan")
-pest            = City_SIRD(10000, initial_infected=0, name="Pest")
-suceava         = City_SIRD(20000, initial_infected=0, name="Suceava")
-seville         = City_SIRD(45000, initial_infected=0, name="Seville")
-siena           = City_SIRD(50000, initial_infected=0, name="Siena")
-targoviste      = City_SIRD(25000, initial_infected=0, name="Târgoviște")
-toledo          = City_SIRD(42000, initial_infected=0, name="Toledo")
-trnovo          = City_SIRD(35000, initial_infected=0, name="Veliko Tarnovo")
-vienna          = City_SIRD(35000, initial_infected=0, name="Vienna")
-zagreb          = City_SIRD(5000, initial_infected=0, name="Zagreb")
-zurich          = City_SIRD(6000, initial_infected=0, name="Zurich")
+feodosia       = City_SIRD(40000,  initial_infected=0, name="Feodosia")
+constantinople = City_SIRD(150000, initial_infected=0, name="Constantinople")
+thessaloniki   = City_SIRD(120000, initial_infected=0, name="Thessaloniki")
+ragusa         = City_SIRD(30000,  initial_infected=0, name="Ragusa")
+venice         = City_SIRD(150000, initial_infected=0, name="Venice")
+genoa          = City_SIRD(90000,  initial_infected=0, name="Genoa")
+marseille      = City_SIRD(31000,  initial_infected=0, name="Marseille")
+barcelona      = City_SIRD(48000,  initial_infected=0, name="Barcelona")
+palermo        = City_SIRD(51000,  initial_infected=0, name="Palermo")
+naples         = City_SIRD(55000,  initial_infected=0, name="Naples")
+athens         = City_SIRD(25000,  initial_infected=0, name="Athens")
+florence       = City_SIRD(110000, initial_infected=0, name="Florence")
+rome           = City_SIRD(40000,  initial_infected=0, name="Rome")
+moscow         = City_SIRD(25000,  initial_infected=0, name="Moscow")
+sofia          = City_SIRD(20000,  initial_infected=0, name="Sofia")
+belgrade       = City_SIRD(20000,  initial_infected=0, name="Belgrade")
+lviv           = City_SIRD(10000,  initial_infected=0, name="Lviv")
+cnapoca        = City_SIRD(5000,   initial_infected=0, name="Cluj-Napoca")
+debrecen       = City_SIRD(3000,   initial_infected=0, name="Debrecen")
+durres         = City_SIRD(25000,  initial_infected=0, name="Durres")
+burgos         = City_SIRD(25000,  initial_infected=0, name="Burgos")
+bordeaux       = City_SIRD(35000,  initial_infected=0, name="Bordeaux")
+montpellier    = City_SIRD(35000,  initial_infected=0, name="Montpellier")
+toulouse       = City_SIRD(30000,  initial_infected=0, name="Toulouse")
+geneve         = City_SIRD(4000,   initial_infected=0, name="Geneve")
+granada        = City_SIRD(150000, initial_infected=0, name="Granada")
+kyiv           = City_SIRD(20000,  initial_infected=0, name="Kyiv")
+lisboa         = City_SIRD(35000,  initial_infected=0, name="Lisboa")
+milan          = City_SIRD(120000, initial_infected=0, name="Milan")
+pest           = City_SIRD(10000,  initial_infected=0, name="Pest")
+suceava        = City_SIRD(20000,  initial_infected=0, name="Suceava")
+seville        = City_SIRD(45000,  initial_infected=0, name="Seville")
+siena          = City_SIRD(50000,  initial_infected=0, name="Siena")
+targoviste     = City_SIRD(25000,  initial_infected=0, name="Târgoviște")
+toledo         = City_SIRD(42000,  initial_infected=0, name="Toledo")
+trnovo         = City_SIRD(35000,  initial_infected=0, name="Veliko Tarnovo")
+vienna         = City_SIRD(35000,  initial_infected=0, name="Vienna")
+zagreb         = City_SIRD(5000,   initial_infected=0, name="Zagreb")
+zurich         = City_SIRD(6000,   initial_infected=0, name="Zurich")
 
-fes             = City_SIRD(175000, initial_infected=0, name="Fes")
-izmir           = City_SIRD(30000,  initial_infected=0, name="Izmir")
-jerusalem       = City_SIRD(10000,  initial_infected=0, name="Jerusalem")
-tunis           = City_SIRD(40000,   initial_infected=0, name="Tunis")
-cairo           = City_SIRD(400000,  initial_infected=0, name="Cairo")
+fes            = City_SIRD(175000, initial_infected=0, name="Fes")
+izmir          = City_SIRD(30000,  initial_infected=0, name="Izmir")
+jerusalem      = City_SIRD(10000,  initial_infected=0, name="Jerusalem")
+tunis          = City_SIRD(40000,  initial_infected=0, name="Tunis")
+cairo          = City_SIRD(400000, initial_infected=0, name="Cairo")
 
-sarai           = City_SIRD(100000,  initial_infected=100, name="Sarai")
+sarai          = City_SIRD(100000, initial_infected=100, name="Sarai")
 
 
 # Baltijas un Ziemeļu jūra jeb sviesta eiropa
 
-riga            = City_SIRD(6500,   initial_infected=0, name="Riga")
-vilnius         = City_SIRD(20000,  initial_infected=0, name="Vilnius")
-tallinn         = City_SIRD(4000,   initial_infected=0, name="Tallinn")
-berlin          = City_SIRD(5500,   initial_infected=0, name="Berlin")
-brussels        = City_SIRD(30000,  initial_infected=0, name="Brussels")
-danzig          = City_SIRD(20000,  initial_infected=0, name="Danzig")
-ghent           = City_SIRD(55000,  initial_infected=0, name="Ghent")
-turku           = City_SIRD(5000,   initial_infected=0, name="Turku")
-dublin          = City_SIRD(20000,  initial_infected=0, name="Dublin")
-oslo            = City_SIRD(5000,   initial_infected=0, name="Oslo")
-paris           = City_SIRD(200000, initial_infected=0, name="Paris")
-stockholm       = City_SIRD(8000,   initial_infected=0, name="Stockholm")
-york            = City_SIRD(23000,  initial_infected=0, name="York")
+riga           = City_SIRD(6500,   initial_infected=0, name="Riga")
+vilnius        = City_SIRD(20000,  initial_infected=0, name="Vilnius")
+tallinn        = City_SIRD(4000,   initial_infected=0, name="Tallinn")
+berlin         = City_SIRD(5500,   initial_infected=0, name="Berlin")
+brussels       = City_SIRD(30000,  initial_infected=0, name="Brussels")
+danzig         = City_SIRD(20000,  initial_infected=0, name="Danzig")
+ghent          = City_SIRD(55000,  initial_infected=0, name="Ghent")
+turku          = City_SIRD(5000,   initial_infected=0, name="Turku")
+dublin         = City_SIRD(20000,  initial_infected=0, name="Dublin")
+oslo           = City_SIRD(5000,   initial_infected=0, name="Oslo")
+paris          = City_SIRD(200000, initial_infected=0, name="Paris")
+stockholm      = City_SIRD(8000,   initial_infected=0, name="Stockholm")
+york           = City_SIRD(23000,  initial_infected=0, name="York")
 novgorod       = City_SIRD(50000,  initial_infected=0, name="Novgorod")
-nurmberg        = City_SIRD(20000,  initial_infected=0, name="Nurmberg")
-prague          = City_SIRD(40000,  initial_infected=0, name="Prague")
-lubeck          = City_SIRD(24000,  initial_infected=0, name="Lubeck")
-london          = City_SIRD(80000,  initial_infected=0, name="London")
-krakow          = City_SIRD(10000,  initial_infected=0, name="Krakow")
-bern            = City_SIRD(5000,   initial_infected=0, name="Bern")
-erfurt          = City_SIRD(32000,  initial_infected=0, name="Erfurt")
-bruges          = City_SIRD(50000,  initial_infected=0, name="Bruges")
-bergen          = City_SIRD(7000,   initial_infected=0, name="Bergen")
-deventer        = City_SIRD(13000,  initial_infected=0, name="Deventer")
-copenhagen      = City_SIRD(3000,   initial_infected=0, name="Copenhagen")
-polotsk         = City_SIRD(5000,   initial_infected=0, name="Polotsk")
-wroclaw         = City_SIRD(12000,  initial_infected=0, name="Wroclaw")
-cologne         = City_SIRD(54000,  initial_infected=0, name="Cologne")
-olomouc         = City_SIRD(10000,  initial_infected=0, name="Olomouc")
-rouen           = City_SIRD(40000,  initial_infected=0, name="Rouen")
-yaroslavl       = City_SIRD(5000,  initial_infected=0, name="Yaroslavl")
-smolensk        = City_SIRD(10000,  initial_infected=0, name="Smolensk")
+nurmberg       = City_SIRD(20000,  initial_infected=0, name="Nurmberg")
+prague         = City_SIRD(40000,  initial_infected=0, name="Prague")
+lubeck         = City_SIRD(24000,  initial_infected=0, name="Lubeck")
+london         = City_SIRD(80000,  initial_infected=0, name="London")
+krakow         = City_SIRD(10000,  initial_infected=0, name="Krakow")
+bern           = City_SIRD(5000,   initial_infected=0, name="Bern")
+erfurt         = City_SIRD(32000,  initial_infected=0, name="Erfurt")
+bruges         = City_SIRD(50000,  initial_infected=0, name="Bruges")
+bergen         = City_SIRD(7000,   initial_infected=0, name="Bergen")
+deventer       = City_SIRD(13000,  initial_infected=0, name="Deventer")
+copenhagen     = City_SIRD(3000,   initial_infected=0, name="Copenhagen")
+polotsk        = City_SIRD(5000,   initial_infected=0, name="Polotsk")
+wroclaw        = City_SIRD(12000,  initial_infected=0, name="Wroclaw")
+cologne        = City_SIRD(54000,  initial_infected=0, name="Cologne")
+olomouc        = City_SIRD(10000,  initial_infected=0, name="Olomouc")
+rouen          = City_SIRD(40000,  initial_infected=0, name="Rouen")
+yaroslavl      = City_SIRD(5000,   initial_infected=0, name="Yaroslavl")
+smolensk       = City_SIRD(10000,  initial_infected=0, name="Smolensk")
 
 # ==== ADD NODES TO GRAPH ====
 
@@ -545,6 +545,7 @@ for c in cities:
 
 # === EDGES ====
 # Vidusjūras pilsētas sakari (šķautnes)
+
 G.add_edge(targoviste, constantinople,    weight=0.3)
 G.add_edge(targoviste, belgrade,          weight=0.3)
 G.add_edge(targoviste, trnovo,            weight=0.3)
@@ -747,7 +748,7 @@ for c in G.nodes:
 
 # ==== TKINTER KARTE PĒC MODEĻA UN GRAFA ====
 
-# Kartes robežas (nosacīta "Eiropa + Austrumi")
+# Kartes robežas
 MAP_BOUNDS = dict(
     lon_min=-10.0,  # rietumos aiz Ibērijas
     lon_max=50.0,   # austrumos aiz Sarai
@@ -849,34 +850,51 @@ def lonlat_to_xy(lon, lat, W, H, bounds=MAP_BOUNDS):
 
 class MapView:
     """
-    Vienā Canvas tiek zīmēts:
-      - pelēkas līnijas — grafa malas (tirdzniecības ceļi)
+    Šī klase atbild TIKAI par kartes attēlošanu.
+    Canvas tiek zīmēts:
+      - pelēkas līnijas — grafa šķautnes (tirdzniecības ceļi)
       - melns aplis — dzīvie iedzīvotāji (N = S+I+R)
       - sarkans aplis — inficētie (I)
     """
 
     def __init__(self, root, G, width=1920, height=1080, scale_k_alive=0.15, scale_k_inf=0.25, bg="white"):
         self.root = root
+
+        # Grafs ar pilsētām un to savienojumiem
         self.G = G
+
+        # Ekrāna izmēri
         self.W, self.H = width, height
+
+        # Koeficienti, kas nosaka, cik lieli būs apļi
         self.scale_k_alive = scale_k_alive
         self.scale_k_inf = scale_k_inf
 
         self.canvas = tk.Canvas(root, width=self.W, height=self.H, bg=bg, highlightthickness=0)
         self.canvas.pack()
 
-        # Pilsētu pikseļu koordinātas
-        self.xy = {}
-        for city in self.G.nodes:
-            lon, lat = COORDS[city.name]
-            self.xy[city] = lonlat_to_xy(lon, lat, self.W, self.H)
+        # --------------------------------------------------
+        # 1) Aprēķinām pilsētu koordinātas pikseļos
+        # --------------------------------------------------
 
-        # Grafa malas (uzzīmē tikai vienreiz)
+        self.xy = {} # Šeit glabāsim pilsētu koordinātas uz ekrāna
+        for city in self.G.nodes:
+            lon, lat = COORDS[city.name] # Paņemam pilsētas ģeogrāfiskās koordinātas
+            self.xy[city] = lonlat_to_xy(lon, lat, self.W, self.H) # Pārveidojam tās uz Canvas koordinātām
+
+        # --------------------------------------------------
+        # 2) Uzzīmējam šķautnes starp virsotnēm (pilsētām) (vienu reizi)
+        # --------------------------------------------------
+
         self.edge_ids = []
         for u, v, data in self.G.edges(data=True):
             x1, y1 = self.xy[u]
             x2, y2 = self.xy[v]
-            self.edge_ids.append(self.canvas.create_line(x1, y1, x2, y2, fill="#cccccc", width=1))
+            self.edge_ids.append(self.canvas.create_line(x1, y1, x2, y2, fill="#cccccc", width=1)) # pelēka līnija - tirdzniecības ceļš
+
+        # --------------------------------------------------
+        # 3) Izveidojam pilsētu apļus un uzrakstus
+        # --------------------------------------------------
 
         # Pilsētu apļi un uzraksti (izveido vienreiz, vēlāk tikai maina coords)
         self.node_art = {}  # city -> (outer_id, inner_id, label_id)
@@ -901,25 +919,35 @@ class MapView:
         return (cx - r, cy - r, cx + r, cy + r)
 
     def _r_alive(self, N):
-        """Rādiuss melnajam aplim (dzīvie)."""
+        """
+        Aprēķina melnā apļa rādiusu (dzīvie iedzīvotāji).
+        Izmantojam sqrt(N), lai aplis neaugtu pārāk strauji.
+        """
         if N <= 0:
             return 0.0
         return max(2.0, self.scale_k_alive * sqrt(N))
 
     def _r_inf(self, I):
-        """Rādiuss sarkanajam aplim (inficētie)."""
+        """
+        Aprēķina sarkanā apļa rādiusu (inficētie).
+        """
         if I <= 0:
             return 0.0
         return max(3.0, self.scale_k_inf * sqrt(I))
 
     def update_city(self, city):
-        """Atjauno vienas pilsētas grafisko stāvokli."""
+        """
+        Atjauno vienas pilsētas attēlojumu: maina apļu izmērus un redzamību.
+        Tas tiek izmantots katra soli.
+        """
         outer, inner, label = self.node_art[city]
         x, y = self.xy[city]
 
-        N = city.S + city.I + city.R
-        I = city.I
 
+        N = city.S + city.I + city.R # Dzīvo iedzīvotāju skaits
+        I = city.I # Inficēto skaits
+
+        # Aprēķinām rādiusus
         rN = self._r_alive(N)
         rI = self._r_inf(I)
 
@@ -934,7 +962,7 @@ class MapView:
         if I > 0:
             self.canvas.coords(inner, *self._bbox(x, y, rI))
             self.canvas.itemconfigure(inner, state="normal")
-            # Sarkanais vienmēr virs melnā
+            # Sarkanais aplis vienmēr virs melnā
             self.canvas.tag_raise(inner, outer)
         else:
             self.canvas.itemconfigure(inner, state="hidden")
@@ -942,10 +970,18 @@ class MapView:
         # Uzraksts virs centrs–12px
         self.canvas.coords(label, x, y - 12)
 
+    # --------------------------------------------------
+    # VISAS KARTES ATJAUNOŠANA
+    # --------------------------------------------------
     def update_all(self, day=None):
-        """Atjauno VISU pilsētu aplišus."""
+        """
+        Atjauno visu pilsētu attēlojumu.
+        Tiek izsaukta katrā simulācijas solī.
+        """
         for city in self.G.nodes:
             self.update_city(city)
+
+        # Atjaunojam loga virsrakstu ar dienas numuru
         if day is not None:
             self.root.title(f"Black Death map — Day {day}")
 
@@ -974,16 +1010,19 @@ DEFAULT_PARAMS = {
 def apply_global_params_to_cities(G, beta, gamma, mu, cap_frac, overload_mult):
     """
     Uzliek vienus un tos pašus bāzes parametrus visām pilsētām.
-    Nelielas atšķirības tiek saglabātas ar nejaušiem reizinātājiem.
+    Katram parametram pieliekam mazu random (piemēram, +-10%), lai pilsētas nav identiskas.
+    Tas ir veids, kā imitēt, ka reālajā dzīvē pilsētām atšķiras apstākļi.
+    Tāpēc katrai pilsētai ir mazliet savi beta/gamma/mu un kapacitāte.
     """
     for c in G.nodes:
-        c.beta = beta * random.uniform(0.90, 1.10)
-        c.gamma = gamma * random.uniform(0.90, 1.10)
-        c.mu = mu * random.uniform(0.85, 1.15)
-        c.cap_frac = cap_frac * random.uniform(0.8, 1.2)
+        c.beta = beta * random.uniform(0.90, 1.10) # +-10%
+        c.gamma = gamma * random.uniform(0.90, 1.10) # +-10%
+        c.mu = mu * random.uniform(0.85, 1.15) # +-15%
+        c.cap_frac = cap_frac * random.uniform(0.8, 1.2) # +-20%
         c.overload_mult = overload_mult
 
-
+# PARAMETRU NOSAUKUMI TKINTER LOGAM
+# Šo vārdnīcu izmantojam, lai Tkinter logā nerādītu “beta”, “gamma”, utt., bet rādītu saprotamus aprakstus.
 PARAM_LABELS = {
     "beta": "Inficēšanās koeficients (β)",
     "gamma": "Atveseļošanās koeficients (γ)",
@@ -1010,16 +1049,16 @@ PARAM_LABELS = {
 
 def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
     """
-    1) Parāda parametru ievades logu (globālie parametri).
-    2) Atver atsevišķu logu ar pilsētu sarakstu, kur var iestatīt sākotnējos saslimušos.
-    3) Pēc tam palaiž animētu karti pilnekrānā.
+    Galvenā Tkinter funkcija.
+    1) Parāda parametru ievades logu (globālie parametri)
+    2) Atver atsevišķu logu ar pilsētu sarakstu, kur var iestatīt sākotnējos saslimušos
+    3) Palaiž pilnekrāna karti un animāciju (diena pēc dienas)
     """
+    # Izveidojam galveno Tkinter logu
     root = tk.Tk()
     root.title("Black Death – parametru iestatīšana")
 
-    # ==== 1. SOLIS: GLOBĀLO PARAMETRU IEVADES LOGS ====
-
-    form = tk.Frame(root)
+    form = tk.Frame(root) # Frame ir konteineris, kur saliekam label + entry
     form.pack(padx=10, pady=10, fill="both", expand=True)
 
     param_entries = {}
@@ -1057,14 +1096,12 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
         row += 1
 
 
-
     status_var = tk.StringVar()
     status_label = tk.Label(form, textvariable=status_var, fg="red")
     status_label.grid(row=row + 1, column=0, columnspan=2, pady=(0, 8))
 
     def parse_param(name):
         """Nolasa vienu parametru no Entry, pārvērš uz vajadzīgo tipu."""
-        # Она берет param_entries и param_types из области видимости run_sim_with_tk
         txt = param_entries[name].get().strip()
         default = DEFAULT_PARAMS[name]
         typ = param_types[name]
@@ -1079,6 +1116,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
 
 
     def is_float(s):
+        # atļaujam arī komatu kā decimālo atdalītāju
         s = s.strip().replace(",", ".")
         try:
             float(s)
@@ -1091,7 +1129,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
         if s == "":
             return False
         # lai "12.3" netiktu int laukā
-        if "." in s or "," in s:
+        if "." in s or "," in s: # Ja ir punkts/komats, tad tas nav int
             return False
         try:
             int(s)
@@ -1102,12 +1140,18 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
     def validate_inputs():
         """
         Pārbauda visus laukus.
-        Ja ir kļūda -> next_btn disabled.
+        Ja ir kļūda:
+        parāda tekstu status_label
+        bloķē pogu “Turpināt”
+
+        Ja viss ok:
+        notīra statusu
+        atbloķē pogu “Turpināt”
         """
         ok = True
         msg = ""
 
-        # (1) float lauki
+        # (1) pārbaudām float laukus
         float_fields = ["beta", "gamma", "mu", "cap_frac", "overload_mult",
                         "commute_rate", "super_prob", "spike_rate", "rate_mult"]
 
@@ -1118,7 +1162,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
                 msg = f"Kļūda: {name} nav decimālskaitlis"
                 break
 
-        # (2) int lauki
+        # (2) pārbaudām int laukus
         if ok:
             int_fields = ["super_period", "events", "k_min", "k_max", "total_days", "step_ms"]
             for name in int_fields:
@@ -1128,7 +1172,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
                     msg = f"Kļūda: {name} nav vesels skaitlis"
                     break
 
-        # (3) minimālās robežas
+        # (3) pārbaudām minimālās robežas, lai nebūtu absurdi parametri
         if ok:
             super_period = int(param_entries["super_period"].get())
             k_min = int(param_entries["k_min"].get())
@@ -1152,7 +1196,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
                 ok = False
                 msg = "Kļūda: step_ms jābūt >= 1"
 
-        # rezultāts: poga + statuss
+        # Rezultāts: atbloķējam vai bloķējam pogu
         if ok:
             status_var.set("")
             next_btn.config(state="normal")
@@ -1173,6 +1217,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
     def show_initial_infected_window(sim_params):
         """
         Atver jaunu logu ar pilsētu sarakstu un ritjoslu, lai iestatītu sākotnējos saslimušos.
+        Šeit lietotājs izvēlas, kur mēris sākas (vai cik slimi ir katrā pilsētā).
         """
         inf_win = tk.Toplevel(root)
         inf_win.title("Sākotnējie saslimušie pa pilsētām")
@@ -1204,17 +1249,24 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
 
         infected_entries = {}
 
+        # Kārtojam pilsētas pēc nosaukuma, lai saraksts būtu skaists
         for city in sorted(G.nodes, key=lambda c: c.name):
             tk.Label(inner_frame, text=city.name).grid(row=row2, column=0, sticky="w", padx=5, pady=1)
             e = tk.Entry(inner_frame, width=8)
             e.grid(row=row2, column=1, sticky="w", padx=5, pady=1)
-            # Noklusējums – pašreizējais I
+
+            # Noklusējums — tas, kas jau ir city.I (piemēram, Sarai = 100)
             e.insert(0, str(int(city.I)))
+
             infected_entries[city] = e
             row2 += 1
 
         def start_simulation():
-            """Nolasa sākotnējos I, uzliek tos un palaiž animāciju."""
+            """
+            Nolasa visus ievadītos I un uzliek tos uz pilsētām.
+            Tad aizver šo logu un palaiž pašu simulāciju + karti.
+            """
+
             # Uzliek sākotnējos saslimušos pa pilsētām
             for city, entry in infected_entries.items():
                 txt = entry.get().strip()
@@ -1243,7 +1295,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
             # Aizver logu ar sākotnējiem saslimušajiem
             inf_win.destroy()
 
-            # ==== 3. SOLIS: PILNEKRĀNA KARTE ====
+            #
             root.title("Black Death – Eiropas karte")
             root.state("zoomed")  # Windows pilnekrāna režīms
             root.update_idletasks()
@@ -1259,13 +1311,24 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
             step_ms_loc = sim_params["step_ms"]
 
             def one_step():
+                """
+                Viena simulācijas diena:
+                1) aprēķina ārējo infekcijas spiedienu (parasto + uzliesmojumus)
+                2) izsauc city.step() katrai pilsētai (SIRD katrai pilsētai)
+                3) atjauno karti
+                """
+                # palielinām dienu par 1
                 d = day_state["day"] + 1
                 day_state["day"] = d
 
+                # ja pārsniedzam kopējo dienu skaitu, tad apturam simulāciju
                 if d > total_days_loc:
                     return
 
+                # parastais (ikdienas) ārējais spiediens no kaimiņiem
                 base_ext = compute_commute_forces(G, commute_rate=sim_params["commute_rate"])
+
+                # retie uzliesmojumi (super-spikes), kas reizēm notiek
                 spike_ext = super_commute_spikes(
                     G, d,
                     super_period=sim_params["super_period"],
@@ -1277,11 +1340,13 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
                     rng=rng_shocks
                 )
 
+                # saliekam kopējo spiedienu
                 ext = {u: base_ext[u] + spike_ext.get(u, 0.0) for u in G.nodes}
 
                 for city in G.nodes:
                     city.step(external_infection_force=ext[city])
 
+                # pārzīmējam karti uz jauno dienu
                 view.update_all(day=d)
 
                 if d < total_days_loc:
@@ -1291,14 +1356,16 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
             view.update_all(day=0)
             root.after(step_ms_loc, one_step)
 
-        # Poga simulācijas startēšanai
+        # Poga, kas palaiž simulāciju (pēc I ievades)
         start_btn2 = tk.Button(inner_frame, text="Sākt simulāciju", command=start_simulation)
         start_btn2.grid(row=row2 + 1, column=0, columnspan=2, pady=10)
 
     def on_next():
         """
+        POGA “TURPINĀT” (NO 1. LOGA UZ 2. LOGU)
         Pēc globālo parametru ievades atver logu ar sākotnējiem saslimušajiem.
         """
+        # Ja validācija neiziet, tad neko nedarām
         if not validate_inputs():
             return
 
@@ -1319,7 +1386,7 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
         total_days_loc = parse_param("total_days")
         step_ms_loc = parse_param("step_ms")
 
-        # Normē varbūtību robežās [0,1]
+        # super_prob ieliekam robežās [0,1]
         if super_prob < 0:
             super_prob = 0.0
         elif super_prob > 1:
@@ -1347,15 +1414,16 @@ def run_sim_with_tk(G, compute_commute_forces, super_commute_spikes):
             "step_ms": step_ms_loc,
         }
 
-        # Parametru formu var iznīcināt (lai paliek tikai jaunie logi)
+        # Paslēpjam pirmo logu, lai tas netraucētu (bet root paliek dzīvs)
         root.withdraw()
+
+        # Noņemam formu (lai vairs nav redzama)
         form.destroy()
 
         # Atver otro logu ar pilsētu sarakstu
         show_initial_infected_window(sim_params)
 
-    # --- INFO POGAS FUNKCIONALITĀTE ---
-
+    # INFO POGAS FUNKCIONALITĀTE
     info_text =  """=======================================================
           KĀ DARBOJAS "MELNĀS NĀVES" SIMULĀCIJA?
 =======================================================
@@ -1470,23 +1538,24 @@ Papildus parastajai plūsmai, modelis simulē retus, negaidītus notikumus (piem
 """
 
     def show_info_window():
-        # Uzreiz atslēdzam pogu "info", lai nevarētu atvērt vairākus logus
+        # Uzreiz atslēdzam pogu "info", lai lietotājs nevarētu atvērt vairākus info logus vienlaicīgi
         info_btn.config(state="disabled")
 
+        # Izveidojam jaunu atsevišķu logu (Toplevel)
         info_win = tk.Toplevel(root)
         info_win.title("Informācija")
 
-        # Funkcija, kas izpildās, kad info logs tiek aizvērts (ar X vai ar destroy)
+        # Funkcija, kas izpildās, kad info logs tiek aizvērts
         def on_close():
-            # Vispirms iznīcinām info logu
+            # aizveram info logu
             info_win.destroy()
-            # Pēc tam atkal aktivizējam pogu "info"
+            # atkal ieslēdzam pogu "info"
             info_btn.config(state="normal")
 
-        # Noķeram aizvēršanu ar loga krustiņu (WM_DELETE_WINDOW)
+        # noķeram aizvēršanu ar loga krustiņu (WM_DELETE_WINDOW)
         info_win.protocol("WM_DELETE_WINDOW", on_close)
 
-        # Teksta lauks ar ritjoslu
+        # vertikālā ritjosla teksta laukam
         text_area = tk.Text(info_win, wrap="word", padx=10, pady=10, width=60, height=20)
         text_area.pack(side="left", fill="both", expand=True)
 
@@ -1500,6 +1569,8 @@ Papildus parastajai plūsmai, modelis simulē retus, negaidītus notikumus (piem
 
     next_btn = tk.Button(form, text="Turpināt", command=on_next)
     next_btn.grid(row=row + 2, column=0, columnspan=2, pady=(10, 2))
+
+    # Uzreiz pārbaudām, vai ievade ir korekta
     validate_inputs()
 
     # Poga "i" (info)
